@@ -18,12 +18,8 @@ export default class Layout { // QWERTY layout
         for (let i = 0; i < line.length; i++) {
             this.pos.set(line[i], {x: para.posx + (i + 2)*this.keyWidth, y: para.posy + this.keyHeight * 2.5});
         }
-        console.log(this.pos);
     }
     render(context) {
-        console.log("in render");
-        console.log(this.pos);
-        console.log(this.pos.keys());
         context.textAlign = 'center';
         this.pos.forEach((value, key) => {
             context.strokeRect(value.x - this.keyWidth/2, value.y - this.keyHeight/2, this.keyWidth, this.keyHeight);

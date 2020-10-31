@@ -2,31 +2,36 @@ import React, { useEffect, useRef } from 'react';
 import './app.css';
 import ReactImage from './react.png';
 import Keyboard from './components/Keyboard/keyboard';
+import Grid from './components/Grid/Grid';
 import io from 'socket.io-client';
 
 const App = () => {
   const keyboardRef = useRef();
   useEffect(() => {
-    const socket = io('http://localhost:8080');
-    socket.on('connect', () => {
-        console.log('connected!!');
-      });
-    socket.on('data', function(data) {
-      console.log('receive:');
-      console.log(data);
-      let lines = data.split('\n');
-      lines.forEach(element => {
-        let items = element.split(' ');
-        updateEvent(parseInt(items[0]), {x: parseFloat(items[1]), y: parseFloat(items[2])}, true);        
-      });
+    // const socket = io();
+    // socket.on('connect', () => {
+    //     console.log('connected!!');
+    //   });
+    // socket.on('data', function(data) {
+    //   // console.log('receive:');
+    //   // console.log(data);
+    //   let lines = data.split('\n');
+    //   lines.forEach(element => {
+    //     let items = element.split(' ');
+    //     updateEvent(parseInt(items[0]), {x: parseFloat(items[1]), y: parseFloat(items[2])}, true);        
+    //   });
 
-    });
+    // });
   });
 
-  let updateEvent  = (type, pos, normalized) => {
+  let updateEvent = (type, pos, normalized) => {
     keyboardRef.current.onEvent(type, pos, normalized);
   }
-  return (<div><Keyboard cRef={keyboardRef}/></div>)
+  return (
+  <div>
+    <Keyboard cRef={keyboardRef}/>
+    <Grid />
+  </div>)
 }
 export default App;
 // export default class App extends Component {

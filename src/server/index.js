@@ -7,6 +7,9 @@ const io = require('socket.io')(server, {});
 io.on('connection', socket => { 
         console.log('socket io connected');
     });
+io.on('disconnected', socket => {
+    console.log('socket io disconnected');
+});
 
 app.use(express.static('dist'));
 app.get('/api/getUsername', (req, res) => res.send({ username: os.userInfo().username }));
@@ -26,8 +29,14 @@ const socketServer = net.createServer((connection) => {
         str = bytes.toString();
         console.log(str);
         io.sockets.emit('data', str);
-    })
-    connection.pipe(connection);
+    });
+    connection.on('error', err => {
+        console.log('发送客户端错误' + err);
+    });
+    connection.on('close', had_err => {
+        console.log('发送客户端关闭,' + (had_err?'有':'无')+'错误');
+    });
+    // connection.pipe(connection);
 });
 socketServer.listen(8081, () => {
      console.log('socket服务器已启动');

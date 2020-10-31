@@ -1,3 +1,7 @@
 canvas {
     border: red 1px solid;
 }
+ul li {
+    list-style: none;
+
+}
