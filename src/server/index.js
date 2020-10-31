@@ -1,9 +1,36 @@
 const express = require('express');
 const os = require('os');
-
 const app = express();
+const server = require('http').createServer(app);
+const io = require('socket.io')(server, {});
+
+io.on('connection', socket => { 
+        console.log('socket io connected');
+    });
 
 app.use(express.static('dist'));
 app.get('/api/getUsername', (req, res) => res.send({ username: os.userInfo().username }));
 
-app.listen(process.env.PORT || 8080, () => console.log(`Listening on port ${process.env.PORT || 8080}!`));
+server.listen(process.env.PORT || 8080, () => console.log(`Listening on port ${process.env.PORT || 8080}!`));
+
+
+//socket 
+
+const net = require('net');
+const socketServer = net.createServer((connection) => {
+    console.log(`客户端 ${connection.remoteAddress} 已连接`);
+    connection.on('end', () => {
+        console.log(`客户端 ${connection.remoteAddress}已断开连接`);
+    });
+    connection.on('data', bytes => {
+        str = bytes.toString();
+        console.log(str);
+        io.sockets.emit('data', str);
+    })
+    connection.pipe(connection);
+});
+socketServer.listen(8081, () => {
+     console.log('socket服务器已启动');
+    });
+
+
