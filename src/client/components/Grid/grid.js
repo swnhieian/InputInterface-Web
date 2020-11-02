@@ -1,4 +1,6 @@
-import React, { useImperativeHandle, useRef, useEffect, useState } from 'react';
+import { Button } from 'antd';
+import 'antd/dist/antd.css';
+import React, { useEffect, useRef } from 'react';
 import io from 'socket.io-client';
 
 
@@ -33,7 +35,7 @@ const Grid = (props) => {
     useEffect(() => {
         updateCanvas();
         canvasRef.current.onmousemove = mouseMove;
-        const socket = io();
+        const socket = io(document.domain+':8081');
         socket.on('connect', () => {
             console.log('connected!!');
         });
@@ -70,6 +72,7 @@ const Grid = (props) => {
     return (
       <div>
         <canvas ref={canvasRef} width="450" height="450" />
+        <Button type="primary">test</Button>
       </div>    
     );
 }

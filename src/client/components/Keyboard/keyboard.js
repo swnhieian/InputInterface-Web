@@ -1,8 +1,9 @@
-import React, { useImperativeHandle, useRef, useEffect, useState } from 'react';
+import { Col, InputNumber, List, notification, Row, Switch } from 'antd';
+import 'antd/dist/antd.css';
+import React, { useEffect, useImperativeHandle, useRef, useState } from 'react';
+import io from 'socket.io-client';
 import './keyboard.css';
 import Layout from './layout';
-import io from 'socket.io-client';
-
 
 const START = 1;
 const MOVE = 2;
@@ -10,7 +11,6 @@ const END = 3;
 const EXPLORE = 4;
 const Keyboard = ({cRef}) => {
     const canvasRef = useRef(null);
-    const corpusSize = 30000;
     const sampleSize = 50;
     const [candidates, setCandidates] = useState([]);
     const isStart = useRef(false);
@@ -21,7 +21,10 @@ const Keyboard = ({cRef}) => {
 
 
 
-    let wordDict = [];
+    const [wordDict, setWordDict] = useState([]);
+    const [useMouse, setUseMouse] = useState(false);
+    const [corpusSize, setCorpusSize] = useState(1000);
+
 
     useImperativeHandle(cRef, () => ({
         onEvent: (type, pos, normalized) => {
@@ -51,26 +54,26 @@ const Keyboard = ({cRef}) => {
         };
         layout.current = new Layout(keyboardParameter.current);
         layout.current.render(context);
-        loadCorpus();
+        
         canvas.onmousedown = mouseDown;
         canvas.onmousemove = mouseMove;
-        canvas.onmouseup = mouseUp;
-        const socket = io();
-    socket.on('connect', () => {
-        console.log('connected!!');
-      });
-    socket.on('data', function(data) {
-      let lines = data.split('\n');
-      lines.forEach(element => {
-        let items = element.split(' ');
-        onEvent(parseInt(items[0]), {x: parseFloat(items[1]), y: parseFloat(items[2])}, true);        
-      });
-    });
-
-       
-    
-        
+        canvas.onmouseup = mouseUp;        
     }
+
+    useEffect(() => {
+        loadCorpus();
+        const socket = io(document.domain+':8081');
+        socket.on('connect', () => {
+            console.log('connected!!');
+        });
+        socket.on('data', function(data) {
+            let lines = data.split('\n');
+            lines.forEach(element => {
+                let items = element.split(' ');
+                onEvent(parseInt(items[0]), {x: parseFloat(items[1]), y: parseFloat(items[2])}, true);        
+            });
+        });
+    }, []);
 
     let windowToCanvas = (c, x, y) => {
         let rect = c.getBoundingClientRect()
@@ -79,46 +82,65 @@ const Keyboard = ({cRef}) => {
         return {x: xpos, y: ypos};
     }
 
+    let mouseControl = (type, e) => {
+        if (useMouse) {
+            let position = windowToCanvas(canvasRef.current, e.clientX, e.clientY);
+            onEvent(type, position);
+        }
+    }
+
     let mouseDown = (e) => {
+        console.log("in mouse down");
+        console.log(wordDict);
+        if (!useMouse) {return;}
+        // console.log("mouse down 2");
         let position = windowToCanvas(canvasRef.current, e.clientX, e.clientY);
         onEvent(START, position);
     }
 
+
     let mouseMove = (e) => {
+        if (!useMouse) {return;}
+
         let position = windowToCanvas(canvasRef.current, e.clientX, e.clientY);
         onEvent(MOVE, position);
     }
 
     let mouseUp = (e) => {
+        if (!useMouse) {return;}
+
         let position = windowToCanvas(canvasRef.current, e.clientX, e.clientY);
         onEvent(END, position);
     }
 
+    const openNotification = (type, content) => {
+        notification[type]({
+            message: content
+        });
+    };
+
 
     let loadCorpus = () => {
-        // let corpus = require('../../assets/corpus.txt');
-        // let lineData = data.split('\n');
-        // for (let i = 0; i < corpusSize; i++) {
-        //     let item = lineData[i].split(' ');
-        //     let word = item[0].trim();
-        //     let freq = parseInt(item[1]);
-        //     wordDict.push([word, freq, getPath(word)]);
-        // }
-        // alert("loading corpus complete!");
         fetch('/corpus.txt')
         .then(res => {
             return res.text()
         })
         .then(data => {
             let lineData = data.split('\n');
-            for (let i = 0; i < corpusSize; i++) {
+            let tempDict = [];
+            for (let i = 0; i < lineData.length; i++) {
                 let item = lineData[i].split(' ');
                 let word = item[0].trim();
                 let freq = parseInt(item[1]);
-                wordDict.push([word, freq, getPath(word)]);
+                tempDict.push([word, freq, getPath(word)]);
             }
-            alert("loading corpus complete!");
+            setWordDict(tempDict);
+            console.log(wordDict);
+            openNotification('success', '词库加载成功');
         })
+        .catch(err => {
+            openNotification('error', '词库加载失败' + err);
+        });
     }
 
     let getPath = (word) => {
@@ -200,6 +222,7 @@ const Keyboard = ({cRef}) => {
         }
     }
 
+       
     let onEvent = (type, pos, normalized = false) => {
         if (type != START && type != MOVE && type != EXPLORE && type != END) {return;}
         if (normalized) {
@@ -242,12 +265,17 @@ const Keyboard = ({cRef}) => {
         return ret / sampleSize;
     }
 
+    
     let calculateCandidate = () => {
+        console.log("in calculate candidate");
         let userP = resamplePath(userPath.current);
         let ans = [];
         let totDis = 0;
         let totFreq = 0;
-        wordDict.forEach(ele => {
+        console.log(wordDict);
+        for (let i=0; i < corpusSize; i++) {
+            let ele = wordDict[i];
+            // console.log(ele);
             let word = ele[0];
             let freq = ele[1];
             let path = ele[2];
@@ -255,23 +283,40 @@ const Keyboard = ({cRef}) => {
             ans.push([word, -Math.log(dis)]);// - 15*Math.log(dis)]);
             totDis += 1/dis;
             totFreq += freq;
-        });
+        }
         // for (let i=0; i<ans.length; i++) {
         //     ans[i][1] += Math.log(wordDict[i][1]);Math.log(ans[i][1])+Math.log(wordDict[i][1] / totFreq);
         // }
         ans.sort((a, b) => {return b[1] - a[1]});
         setCandidates(ans.slice(0, 5));
-    }
+    };
 
     return (
-      <div>
-        <canvas ref={canvasRef} width="450" height="450" />
-        <ul>
-        {candidates.map( (candidate, i)=>
-            (<li key={i}>{candidate[0]}</li>)
-        )}
-        </ul>
-      </div>    
+      <Row style={{textAlign: 'center'}}>
+          
+          <Col span={12}>
+            <canvas ref={canvasRef} width="450" height="450"  onMouseDown={e=>mouseControl(START, e)} onMouseMove={e=>mouseControl(MOVE, e)} onMouseUp={e=>mouseControl(END, e)}/>
+            {/* <canvas ref={canvasRef} width="450" height="450"/> */}
+            </Col>
+          <Col span={6}>
+            <List
+                header={<div>候选词列表</div>}
+                bordered
+                dataSource={candidates}
+                renderItem={item => (
+                    <List.Item>
+                    <div>{item[0]}</div>
+                    </List.Item>
+                )}
+                />
+          </Col>
+          <Col span={6}>
+            配置{corpusSize}
+            <InputNumber onChange={v=>setCorpusSize(v)} value={corpusSize} />
+        绑定鼠标: <Switch size="small" checked={useMouse} onChange={(v)=>{setUseMouse(v);console.log(v);console.log(useMouse);}} />
+
+          </Col>
+      </Row>
     );
 }
 
