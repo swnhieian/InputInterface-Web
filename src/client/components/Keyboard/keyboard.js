@@ -1,21 +1,23 @@
-import { Col, InputNumber, List, notification, Row, Switch } from 'antd';
+import { ClearOutlined, FullscreenExitOutlined, FullscreenOutlined, SettingOutlined } from '@ant-design/icons';
+import { Card, Col, Divider, Drawer, Form, InputNumber, List, notification, Row, Space, Switch } from 'antd';
 import 'antd/dist/antd.css';
-import React, { useEffect, useImperativeHandle, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { FullScreen, useFullScreenHandle } from "react-full-screen";
 import io from 'socket.io-client';
 import './keyboard.css';
 import Layout from './layout';
+
 
 const START = 1;
 const MOVE = 2;
 const END = 3;
 const EXPLORE = 4;
 const Keyboard = ({cRef}) => {
-    const canvasRef = useRef(null);
+    const canvasRef = useRef({'width':450,'height':450});
     const sampleSize = 50;
     const [candidates, setCandidates] = useState([]);
     const isStart = useRef(false);
     const userPath = useRef([]);
-    const layout = useRef(null);
     const cursorPos = useRef(null);
     const keyboardParameter= useRef(null);
 
@@ -23,42 +25,26 @@ const Keyboard = ({cRef}) => {
 
     const [wordDict, setWordDict] = useState([]);
     const [useMouse, setUseMouse] = useState(false);
+    const [showScore, setShowScore] = useState(false);
+    const [useRelativeModel, setUseRelativeModel] = useState(true);
+    const [useLanguageModel, setUseLanguageModel] = useState(true);
     const [corpusSize, setCorpusSize] = useState(1000);
+    const [showSettings, setShowSettings] = useState(false);
+    const [keyboardWidth, setKeyboardWidth] = useState(450);
+    const [keyboardHeight, setKeyboardHeight] = useState(225);
+    const [keyboardPosX, setKeyboardPosX] = useState(0);
+    const [keyboardPosY, setKeyboardPosY] = useState(225);
+    const [canvasWidth, setCanvasWidth] = useState(450);
+    const [canvasHeight, setCanvasHeight] = useState(450);
+    const fullScreenHandle = useFullScreenHandle();
 
 
-    useImperativeHandle(cRef, () => ({
-        onEvent: (type, pos, normalized) => {
-          onEvent(type, pos, normalized);
-        }
-    }));
-
-    useEffect(() => {
-        updateCanvas();
-    }, [userPath]);
-    
+    const layout = useRef(null);
+    // const [layout, setLayout] = useState(new Layout({'width': 450, 'height': 225, 'posx': 0, 'posy': 225}));
 
     useEffect(() => {
         init()
-    }, [canvasRef]);
-
-
-    let init = () => {
-        let canvas = canvasRef.current
-        let context = canvas.getContext('2d');
-        const keyboardHeight = 450 / 2;
-        keyboardParameter.current = {
-            width: canvas.width,
-            height: keyboardHeight,
-            posx: 0,  // position of keyboard in canvas
-            posy: canvas.height - keyboardHeight
-        };
-        layout.current = new Layout(keyboardParameter.current);
-        layout.current.render(context);
-        
-        canvas.onmousedown = mouseDown;
-        canvas.onmousemove = mouseMove;
-        canvas.onmouseup = mouseUp;        
-    }
+    }, [canvasRef, canvasHeight, canvasWidth]);
 
     useEffect(() => {
         loadCorpus();
@@ -75,6 +61,45 @@ const Keyboard = ({cRef}) => {
         });
     }, []);
 
+    
+
+    useEffect(() => {
+        layout.current = new Layout({
+            width: keyboardWidth,
+            height: keyboardHeight,
+            posx: keyboardPosX,
+            posy: keyboardPosY
+        });
+        updateCanvas();
+    }, [keyboardHeight, keyboardWidth, keyboardPosX, keyboardPosY]);
+
+    useEffect(() => {
+        updateCanvas();
+    }, [userPath]);
+    
+
+    
+
+
+    let init = () => {
+        console.log("in init)");
+        let canvas = canvasRef.current
+        // let context = canvas.getContext('2d');
+        setKeyboardWidth(canvas.width);
+        setKeyboardHeight(canvas.height / 2);
+        setKeyboardPosX(0);
+        setKeyboardPosY(canvas.height / 2);
+        layout.current = new Layout({
+            width: keyboardWidth,
+            height: keyboardHeight,
+            posx: keyboardPosX,
+            posy: keyboardPosY
+        });
+        updateCanvas();
+    }
+
+    
+
     let windowToCanvas = (c, x, y) => {
         let rect = c.getBoundingClientRect()
         let xpos = x - rect.left * (c.width / rect.width);
@@ -90,10 +115,7 @@ const Keyboard = ({cRef}) => {
     }
 
     let mouseDown = (e) => {
-        console.log("in mouse down");
-        console.log(wordDict);
         if (!useMouse) {return;}
-        // console.log("mouse down 2");
         let position = windowToCanvas(canvasRef.current, e.clientX, e.clientY);
         onEvent(START, position);
     }
@@ -132,10 +154,9 @@ const Keyboard = ({cRef}) => {
                 let item = lineData[i].split(' ');
                 let word = item[0].trim();
                 let freq = parseInt(item[1]);
-                tempDict.push([word, freq, getPath(word)]);
+                tempDict.push([word, freq]);
             }
             setWordDict(tempDict);
-            console.log(wordDict);
             openNotification('success', '词库加载成功');
         })
         .catch(err => {
@@ -196,6 +217,18 @@ const Keyboard = ({cRef}) => {
         let dx = t1.x - t2.x;
         let dy = t1.y - t2.y;
         return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    let clearCanvas = () => {
+        let canvas = canvasRef.current;
+        let context = canvas.getContext('2d');
+        if (context == null) return;
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        if (layout.current != null) {
+            layout.current.render(context);
+        }
+        setCandidates([]);
+        userPath.current = [];
     }
 
     let updateCanvas = () => {
@@ -265,58 +298,236 @@ const Keyboard = ({cRef}) => {
         return ret / sampleSize;
     }
 
+    let logGaussian = (x, mu, sigma) => {
+        let ret = -(x-mu)*(x-mu)/2/sigma/sigma-Math.log(Math.sqrt(2*Math.PI))-Math.log(sigma);
+        return ret;
+    }
+
+    let calculateLocationProbability = (p1, p2, word) => {
+        let ret = 0;
+        let alpha = 1 / sampleSize;
+        for (let i = 0; i< sampleSize; i++) {
+            if (i == 0 || i == sampleSize - 1) {
+                alpha = 0.2;
+            } else {
+                alpha = 0.6 / (sampleSize - 2);
+            }
+            ret += alpha*logGaussian(p1[i].x - p2[i].x, 0, layout.current.keyWidth*0.7);
+            ret += alpha*logGaussian(p1[i].y - p2[i].y, 0, layout.current.keyHeight*0.7);
+        }
+        ret *= sampleSize;
+        // ret = ret / sampleSize * word.length;
+        return ret;
+    }
+
+    let calculateProbability = (p1, p2, word, freq) => {
+        let ret = 0;
+        ret += calculateShapeProbability(p1, p2, word);
+        ret += calculateLocationProbability(p1, p2, word);
+        ret += Math.log(freq);
+        return ret;
+    }
+
+    let normalizePath = (p) => {
+        let minx = Number.MAX_VALUE;
+        let maxx = Number.MIN_VALUE;
+        let miny = Number.MAX_VALUE;
+        let maxy = Number.MIN_VALUE;
+        let ret = []
+        let sumx = 0;
+        let sumy = 0;
+        for (let i = 0; i < p.length; i++) {
+            if (p[i].x < minx) minx = p[i].x;
+            if (p[i].x > maxx) maxx = p[i].x;
+            if (p[i].y < miny) miny = p[i].y;
+            if (p[i].y > maxy) maxy = p[i].y;
+            sumx += p[i].x;
+            sumy += p[i].y;
+        }
+        let scale = 1;
+        if (Math.max(maxx - minx, maxy - miny) > 0) {
+            scale = 1 / Math.max(maxx - minx, maxy - miny);
+        }
+        let center = { x: sumx / p.length, y: sumy / p.length};
+        for (let i = 0; i < p.length; i++) {
+            ret.push({
+                x: (p[i].x - center.x) * scale,
+                y: (p[i].y - center.y) * scale
+            });
+        }
+        return ret;
+    }
+    
+    let calculateShapeProbability = (p1, p2, word) => {
+        let ret = 0;
+        let np1 = normalizePath(p1);
+        let np2 = normalizePath(p2);
+        for (let i = 0; i< sampleSize; i++) {
+            ret += logGaussian(np1[i].x - np2[i].x, 0, 0.3);
+            ret += logGaussian(np1[i].y - np2[i].y, 0, 0.3);
+        }
+        // ret = ret / sampleSize * word.length;
+        if (ret > 0) {
+            console.log(word);
+            console.log(p1);
+            console.log(p2);
+            console.log(np1);
+            console.log(np2);
+        }
+        return ret;
+    }
+
     
     let calculateCandidate = () => {
-        console.log("in calculate candidate");
         let userP = resamplePath(userPath.current);
         let ans = [];
-        let totDis = 0;
-        let totFreq = 0;
-        console.log(wordDict);
         for (let i=0; i < corpusSize; i++) {
             let ele = wordDict[i];
             // console.log(ele);
             let word = ele[0];
             let freq = ele[1];
-            let path = ele[2];
+            let path = getPath(word);
             let dis = similarity(userP, path);
-            ans.push([word, -Math.log(dis)]);// - 15*Math.log(dis)]);
-            totDis += 1/dis;
-            totFreq += freq;
+            let locationScore = calculateLocationProbability(userP, path, word);
+            let shapeScore = calculateShapeProbability(userP, path, word);
+            let pro = locationScore;
+            if (useLanguageModel) {
+                pro += Math.log(freq);
+            }
+            if (useRelativeModel) {
+                pro += shapeScore;
+            } 
+            ans.push([word, pro, locationScore, shapeScore, Math.log(freq)]);
         }
-        // for (let i=0; i<ans.length; i++) {
-        //     ans[i][1] += Math.log(wordDict[i][1]);Math.log(ans[i][1])+Math.log(wordDict[i][1] / totFreq);
-        // }
         ans.sort((a, b) => {return b[1] - a[1]});
+        // console.log(ans);
         setCandidates(ans.slice(0, 5));
     };
 
-    return (
-      <Row style={{textAlign: 'center'}}>
-          
-          <Col span={12}>
-            <canvas ref={canvasRef} width="450" height="450"  onMouseDown={e=>mouseControl(START, e)} onMouseMove={e=>mouseControl(MOVE, e)} onMouseUp={e=>mouseControl(END, e)}/>
-            {/* <canvas ref={canvasRef} width="450" height="450"/> */}
-            </Col>
-          <Col span={6}>
-            <List
-                header={<div>候选词列表</div>}
-                bordered
-                dataSource={candidates}
-                renderItem={item => (
-                    <List.Item>
-                    <div>{item[0]}</div>
-                    </List.Item>
-                )}
-                />
-          </Col>
-          <Col span={6}>
-            配置{corpusSize}
-            <InputNumber onChange={v=>setCorpusSize(v)} value={corpusSize} />
-        绑定鼠标: <Switch size="small" checked={useMouse} onChange={(v)=>{setUseMouse(v);console.log(v);console.log(useMouse);}} />
+    let settingsExtra = () => (
+        <Space>
+        <SettingOutlined onClick={event=>setShowSettings(true)}/>
+        <ClearOutlined onClick={event => clearCanvas()}/>
+        {fullScreenHandle.active
+          ? <FullscreenExitOutlined onClick={fullScreenHandle.exit}/>
+          : <FullscreenOutlined onClick={fullScreenHandle.enter}/>
+        }
+        </Space>
+    );
 
-          </Col>
-      </Row>
+    let fullScreen = () => {
+        console.log("full screen");
+        console.log(fullScreenHandle.active);
+        fullScreenHandle.enter();
+    }
+
+    let settingsClosed = () => {
+        setShowSettings(false);
+    }
+
+    const formLayout = {
+        labelCol: {
+          span: 8,
+        },
+        wrapperCol: {
+          span: 16,
+        },
+        labelAlign: 'left'
+    };
+
+    return (
+        <div>
+        <FullScreen handle={fullScreenHandle}>
+        <Card title="Gesture Keyboard" extra={settingsExtra()} style={{height: '100%'}} bodyStyle={{height: '100%'}}>
+            <Row style={{textAlign: 'center', height: '100%'}} justify="center" align="middle">
+                <Col flex={2} sm={24}>
+                    <canvas ref={canvasRef} width={canvasWidth} height={canvasHeight} onMouseDown={e=>mouseControl(START, e)} onMouseMove={e=>mouseControl(MOVE, e)} onMouseUp={e=>mouseControl(END, e)}/>
+                    {/* <canvas ref={canvasRef} width="450" height="450"/> */}
+                </Col>
+                <Col flex={1}>
+                    <List header={<div>候选词列表</div>} bordered dataSource={candidates}
+                        renderItem={item => (
+                            <List.Item>
+                            <div>{showScore?(''+item):item[0]}</div>
+                            </List.Item>
+                        )}
+                    />
+                </Col>
+            </Row>
+
+            <Drawer 
+              visible={showSettings} 
+              onClose={settingsClosed}
+              width={720}
+              title='键盘设置'>
+                <Form layout='horizontal' {...formLayout}>
+                    <Form.Item label="词库大小(1000-30000)">
+                        <InputNumber style={{'width': '100%'}} min={1000} max={30000} step={1000} onChange={v=>setCorpusSize(v)} value={corpusSize} />
+                    </Form.Item>
+                    <Form.Item label="绑定鼠标事件">
+                        <Switch checked={useMouse} onChange={v=>setUseMouse(v)} />
+                    </Form.Item>
+                    <Form.Item label="使用相对位置信息">
+                        <Switch checked={useRelativeModel} onChange={v=>setUseRelativeModel(v)} />
+                    </Form.Item>
+                    <Form.Item label="使用语言模型">
+                        <Switch checked={useLanguageModel} onChange={v=>setUseLanguageModel(v)} />
+                    </Form.Item>
+                    <Form.Item label="显示匹配结果">
+                        <Switch checked={showScore} onChange={v=>setShowScore(v)} />
+                    </Form.Item>
+                    <Divider>键盘参数</Divider>
+                    <Form.Item label="输入区域大小">
+                        <Row gutter={16}>
+                            <Col flex={1}>
+                                <Form.Item label="宽(0-1000)" layout='horizontal'>
+                                    <InputNumber min={0} max={1000} onChange={v=>setCanvasWidth(v)} value={canvasWidth} />
+                                </Form.Item>
+                            </Col>
+                            
+                            <Col flex={1}>
+                                <Form.Item label="高(0-1000)" layout='horizontal'>
+                                    <InputNumber min={0} max={1000} onChange={v=>setCanvasHeight(v)} value={canvasHeight} />
+                                </Form.Item>
+                            </Col>
+                        </Row>
+                    </Form.Item>
+
+                    <Form.Item label="键盘大小">
+                        <Row gutter={16}>
+                            <Col flex={1}>
+                                <Form.Item label="宽" layout='horizontal'>
+                                    <InputNumber style={{'width': '100%'}} min={0} max={canvasRef.current.width} onChange={v=>setKeyboardWidth(v)} value={keyboardWidth} />
+                                </Form.Item>
+                            </Col>
+                            
+                            <Col flex={1}>
+                                <Form.Item label="高" layout='horizontal'>
+                                    <InputNumber style={{'width': '100%'}} min={0} max={canvasRef.current.height} onChange={v=>setKeyboardHeight(v)} value={keyboardHeight} />
+                                </Form.Item>
+                            </Col>
+                        </Row>
+                    </Form.Item>
+                    <Form.Item label="键盘位置（左上角）">
+                        <Row gutter={16}>
+                            <Col flex={1}>
+                                <Form.Item label="X" layout='horizontal'>
+                                    <InputNumber style={{'width': '100%'}} min={0} max={canvasRef.current.width - keyboardWidth} onChange={v=>setKeyboardPosX(v)} value={keyboardPosX} />
+                                </Form.Item>
+                            </Col>
+                            
+                            <Col flex={1}>
+                                <Form.Item label="Y" layout='horizontal'>
+                                    <InputNumber style={{'width': '100%'}} min={0} max={canvasRef.current.height - keyboardHeight} onChange={v=>setKeyboardPosY(v)} value={keyboardPosY} />
+                                </Form.Item>
+                            </Col>
+                        </Row>
+                    </Form.Item>
+                </Form>
+            </Drawer>
+        </Card>
+        </FullScreen>
+        </div>
     );
 }
 

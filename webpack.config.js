@@ -53,7 +53,7 @@ module.exports = {
     new CopyWebpackPlugin({
       patterns: [{
         from: path.join(__dirname, "src/server/assets"),
-        to: path.join(__dirname, "dist")
+        to: path.join(__dirname, outputDirectory)
       }]
   })
   ]

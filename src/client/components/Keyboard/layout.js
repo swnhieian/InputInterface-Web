@@ -3,6 +3,8 @@ export default class Layout { // QWERTY layout
     keyWidth;
     keyHeight;
     constructor(para) {
+        console.log("construct, layout:");
+        console.log(para);
         this.pos = new Map();
         this.keyWidth = para.width / 10;
         this.keyHeight = para.height / 3;

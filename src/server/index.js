@@ -4,6 +4,16 @@ const app = express();
 const server = require('http').createServer(app);
 const io = require('socket.io')(server, {});
 
+var IPv4,hostName;
+hostName=os.hostname();
+for(var i=0;i<os.networkInterfaces().en0.length;i++){
+    if(os.networkInterfaces().en0[i].family=='IPv4'){
+        IPv4=os.networkInterfaces().en0[i].address;
+    }
+}
+console.log('----------local IP: '+IPv4);
+console.log('----------local host: '+hostName);
+
 io.on('connection', socket => { 
         console.log('socket io connected');
     });
@@ -13,6 +23,11 @@ io.on('disconnected', socket => {
 
 app.use(express.static('dist'));
 app.get('/api/getUsername', (req, res) => res.send({ username: os.userInfo().username }));
+app.get('/api/ip', (req, res) => {
+    res.send({
+        ip: IPv4
+    });
+});
 
 server.listen(process.env.PORT || 8080, () => console.log(`Listening on port ${process.env.PORT || 8080}!`));
 
