@@ -1,7 +1,7 @@
 {
-  "name": "simple-react-full-stack",
+  "name": "web-based-input-interface",
   "version": "1.0.0",
-  "description": "Boilerplate to build a full stack web application using React, Node.js, Express and Webpack.",
+  "description": "A Web-based Input Interface",
   "main": "src/server/index.js",
   "scripts": {
     "build": "webpack --mode production",

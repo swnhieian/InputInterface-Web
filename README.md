@@ -18,6 +18,8 @@ Data format:
 
 `xpos` and `xpos` should be **normalized** to a float number in [0,1]
 
+See `socket-demo.py` as an example.
+
 ## Run
 ```bash
 npm install

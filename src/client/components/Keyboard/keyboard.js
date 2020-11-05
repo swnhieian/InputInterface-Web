@@ -48,7 +48,7 @@ const Keyboard = ({cRef}) => {
 
     useEffect(() => {
         loadCorpus();
-        const socket = io(document.domain+':8081');
+        const socket = io(document.domain+':8080');
         socket.on('connect', () => {
             console.log('connected!!');
         });

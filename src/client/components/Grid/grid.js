@@ -43,9 +43,10 @@ const Grid = (props) => {
     }
 
     useEffect(() => {
-        const socket = io(document.domain+':8081');
+        console.log("trying to connect to "+ document.domain+':8080');
+        const socket = io(document.domain+':8080');
         socket.on('connect', () => {
-            console.log('connected!!');
+            console.log(document.domain+':8080'+'connected!!');
         });
         socket.on('data', function(data) {
             let lines = data.split('\n');
@@ -61,7 +62,6 @@ const Grid = (props) => {
     }, []);
 
     useEffect(() => {
-        console.log("curpospos, canvasheight, canvaswidth");
         updateCanvas();
     }, [canvasRef, cursorPos, canvasHeight, canvasWidth, row, col]);
 
@@ -107,7 +107,7 @@ const Grid = (props) => {
 
     return (
       <FullScreen handle={fullScreenHandle}>
-      <Card title="Gesture Keyboard" extra={settingsExtra()} style={{height: '100%'}} bodyStyle={{height: '100%'}}>
+      <Card title="Cursor Pad" extra={settingsExtra()} style={{height: '100%'}} bodyStyle={{height: '100%'}}>
         <Row style={{textAlign: 'center', height: '100%'}} justify="center" align="middle">
             <Col flex="1">
                 <canvas ref={canvasRef} width={canvasWidth} height={canvasHeight} onMouseMove={mouseMove}/>

@@ -3,6 +3,7 @@ const os = require('os');
 const app = express();
 const server = require('http').createServer(app);
 const io = require('socket.io')(server, {});
+const path = require('path');
 
 var IPv4,hostName;
 hostName=os.hostname();
@@ -15,10 +16,10 @@ console.log('----------local IP: '+IPv4);
 console.log('----------local host: '+hostName);
 
 io.on('connection', socket => { 
-        console.log('socket io connected');
+        console.log('webpage socket io connected');
     });
 io.on('disconnected', socket => {
-    console.log('socket io disconnected');
+    console.log('webpage socket io disconnected');
 });
 
 app.use(express.static('dist'));
@@ -28,6 +29,14 @@ app.get('/api/ip', (req, res) => {
         ip: IPv4
     });
 });
+app.get('/*', function (req, res) {
+    console.log(__dirname);
+    console.log(path.join(__dirname, '/../../dist', 'index.html'));
+    res.sendFile(path.join(__dirname, '/../../dist', 'index.html'));
+});
+
+
+
 
 server.listen(process.env.PORT || 8080, () => console.log(`Listening on port ${process.env.PORT || 8080}!`));
 
@@ -56,5 +65,6 @@ const socketServer = net.createServer((connection) => {
 socketServer.listen(8081, () => {
      console.log('socket服务器已启动');
     });
+
 
 
