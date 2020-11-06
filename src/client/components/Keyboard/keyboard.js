@@ -23,7 +23,8 @@ const Keyboard = ({cRef}) => {
 
 
 
-    const [wordDict, setWordDict] = useState([]);
+    // const [wordDict, setWordDict] = useState([]);
+    const wordDict = useRef([]);
     const [useMouse, setUseMouse] = useState(false);
     const [showScore, setShowScore] = useState(false);
     const [useRelativeModel, setUseRelativeModel] = useState(true);
@@ -52,14 +53,17 @@ const Keyboard = ({cRef}) => {
         socket.on('connect', () => {
             console.log('connected!!');
         });
-        socket.on('data', function(data) {
-            let lines = data.split('\n');
+        socket.on('data', onData);
+    }, []);
+
+    let onData = (data) => {
+        let lines = data.split('\n');
             lines.forEach(element => {
                 let items = element.split(' ');
-                onEvent(parseInt(items[0]), {x: parseFloat(items[1]), y: parseFloat(items[2])}, true);        
+                onEvent(parseInt(items[0]), {x: parseFloat(items[1]), y: parseFloat(items[2])}, true);
             });
-        });
-    }, []);
+
+    }
 
     
 
@@ -82,7 +86,6 @@ const Keyboard = ({cRef}) => {
 
 
     let init = () => {
-        console.log("in init)");
         let canvas = canvasRef.current
         // let context = canvas.getContext('2d');
         setKeyboardWidth(canvas.width);
@@ -156,7 +159,8 @@ const Keyboard = ({cRef}) => {
                 let freq = parseInt(item[1]);
                 tempDict.push([word, freq]);
             }
-            setWordDict(tempDict);
+            // setWordDict(tempDict);
+            wordDict.current = tempDict;
             openNotification('success', '词库加载成功');
         })
         .catch(err => {
@@ -375,12 +379,12 @@ const Keyboard = ({cRef}) => {
         let userP = resamplePath(userPath.current);
         let ans = [];
         for (let i=0; i < corpusSize; i++) {
-            let ele = wordDict[i];
+            let ele = wordDict.current[i];
             // console.log(ele);
             let word = ele[0];
             let freq = ele[1];
             let path = getPath(word);
-            let dis = similarity(userP, path);
+            // let dis = similarity(userP, path);
             let locationScore = calculateLocationProbability(userP, path, word);
             let shapeScore = calculateShapeProbability(userP, path, word);
             let pro = locationScore;
@@ -407,12 +411,6 @@ const Keyboard = ({cRef}) => {
         }
         </Space>
     );
-
-    let fullScreen = () => {
-        console.log("full screen");
-        console.log(fullScreenHandle.active);
-        fullScreenHandle.enter();
-    }
 
     let settingsClosed = () => {
         setShowSettings(false);
