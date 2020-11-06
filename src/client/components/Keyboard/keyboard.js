@@ -23,8 +23,8 @@ const Keyboard = ({cRef}) => {
 
 
 
-    // const [wordDict, setWordDict] = useState([]);
-    const wordDict = useRef([]);
+    const [wordDict, setWordDict] = useState([]);
+    // const wordDict = useRef([]);
     const [useMouse, setUseMouse] = useState(false);
     const [showScore, setShowScore] = useState(false);
     const [useRelativeModel, setUseRelativeModel] = useState(true);
@@ -60,7 +60,7 @@ const Keyboard = ({cRef}) => {
         return function closeSocket() {
             socket.close();
         }
-    }, [corpusSize]);
+    }, [corpusSize, wordDict]);
 
     let onData = (data) => {
         let lines = data.split('\n');
@@ -165,8 +165,8 @@ const Keyboard = ({cRef}) => {
                 let freq = parseInt(item[1]);
                 tempDict.push([word, freq]);
             }
-            // setWordDict(tempDict);
-            wordDict.current = tempDict;
+            setWordDict(tempDict);
+            // wordDict.current = tempDict;
             openNotification('success', '词库加载成功');
         })
         .catch(err => {
@@ -385,7 +385,7 @@ const Keyboard = ({cRef}) => {
         let userP = resamplePath(userPath.current);
         let ans = [];
         for (let i=0; i < corpusSize; i++) {
-            let ele = wordDict.current[i];
+            let ele = wordDict[i];
             // console.log(ele);
             let word = ele[0];
             let freq = ele[1];
