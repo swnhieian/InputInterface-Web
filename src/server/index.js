@@ -6,15 +6,28 @@ const io = require('socket.io')(server, {});
 const path = require('path');
 
 var IPv4,hostName;
-hostName=os.hostname();
-for(var i=0;i<os.networkInterfaces().en0.length;i++){
-    if(os.networkInterfaces().en0[i].family=='IPv4'){
-        IPv4=os.networkInterfaces().en0[i].address;
-    }
-}
+// hostName=os.hostname();
+// for(var i=0;i<os.networkInterfaces().en0.length;i++){
+//     if(os.networkInterfaces().en0[i].family=='IPv4'){
+//         IPv4=os.networkInterfaces().en0[i].address;
+//     }
+// }
+IPv4 = getIPAdress();
+// hostName = server.address().port;
 console.log('----------local IP: '+IPv4);
 console.log('----------local host: '+hostName);
-
+function getIPAdress() {
+    var interfaces = require('os').networkInterfaces();　　
+    for (var devName in interfaces) {　　　　
+        var iface = interfaces[devName];　　　　　　
+        for (var i = 0; i < iface.length; i++) {
+            var alias = iface[i];
+            if (alias.family === 'IPv4' && alias.address !== '127.0.0.1' && !alias.internal) {
+                return alias.address;
+            }
+        }　　
+    }
+}
 io.on('connection', socket => { 
         console.log('webpage socket io connected');
     });

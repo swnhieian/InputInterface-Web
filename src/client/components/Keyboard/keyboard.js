@@ -367,13 +367,6 @@ const Keyboard = ({cRef}) => {
             ret += logGaussian(np1[i].y - np2[i].y, 0, 0.3);
         }
         // ret = ret / sampleSize * word.length;
-        if (ret > 0) {
-            console.log(word);
-            console.log(p1);
-            console.log(p2);
-            console.log(np1);
-            console.log(np2);
-        }
         return ret;
     }
 
