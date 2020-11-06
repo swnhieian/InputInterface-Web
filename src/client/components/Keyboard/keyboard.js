@@ -54,6 +54,9 @@ const Keyboard = ({cRef}) => {
             console.log('connected!!');
         });
         socket.on('data', onData);
+        return function closeSocket() {
+            socket.close();
+        }
     }, []);
 
     let onData = (data) => {

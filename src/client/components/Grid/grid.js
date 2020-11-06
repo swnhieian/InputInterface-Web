@@ -59,6 +59,9 @@ const Grid = (props) => {
             });
         });
         updateCanvas();
+        return function closeSocket() {
+            socket.close();
+        }
     }, []);
 
     useEffect(() => {
