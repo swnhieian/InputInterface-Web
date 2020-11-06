@@ -49,6 +49,9 @@ const Keyboard = ({cRef}) => {
 
     useEffect(() => {
         loadCorpus();
+    }, []);
+
+    useEffect(() => {
         const socket = io(document.domain+':8080');
         socket.on('connect', () => {
             console.log('connected!!');
@@ -57,7 +60,7 @@ const Keyboard = ({cRef}) => {
         return function closeSocket() {
             socket.close();
         }
-    }, []);
+    }, [corpusSize]);
 
     let onData = (data) => {
         let lines = data.split('\n');
