@@ -2,6 +2,7 @@ const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
+const ESLintPlugin = require('eslint-webpack-plugin');
 
 const outputDirectory = 'dist';
 
@@ -55,6 +56,7 @@ module.exports = {
         from: path.join(__dirname, "src/server/assets"),
         to: path.join(__dirname, outputDirectory)
       }]
-  })
+    })//,
+    //new ESLintPlugin()
   ]
 };

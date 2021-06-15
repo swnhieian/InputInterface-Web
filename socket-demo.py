@@ -28,6 +28,9 @@ class CursorClient:
     def send(self, touch_state, x, y):
         paras = [touch_state, x, y]
         self.my_socket.send(str(" ".join([str(item) for item in paras]) + "\n").encode())
+    
+    def sendGlove(self, cmd):
+        self.my_socket.send((cmd+"\n").encode())
 
 
 if __name__ == '__main__':
@@ -42,11 +45,19 @@ if __name__ == '__main__':
     if args.port:
         PORT = args.port
     my_remote_handle = CursorClient(IP, PORT)
-    my_remote_handle.send(1, 0.6, 0.75)
-    my_remote_handle.send(2, 0.25, 0.58)
-    my_remote_handle.send(2, 0.9, 0.75)
-    my_remote_handle.send(2, 0.85, 0.58)
-    my_remote_handle.send(3, 0.85, 0.58)
+    # my_remote_handle.send(1, 0.6, 0.75)
+    # my_remote_handle.send(2, 0.25, 0.58)
+    # my_remote_handle.send(2, 0.9, 0.75)
+    # my_remote_handle.send(2, 0.85, 0.58)
+    # my_remote_handle.send(3, 0.85, 0.58)
+    my_remote_handle.sendGlove('up')
+    time.sleep(1)
+    my_remote_handle.sendGlove('left')
+    time.sleep(1)
+    my_remote_handle.sendGlove('click')
+    time.sleep(5)
+    my_remote_handle.sendGlove('up')
+    time.sleep(1)
     my_remote_handle.close()
 
 
