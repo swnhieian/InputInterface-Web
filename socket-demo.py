@@ -29,7 +29,7 @@ class CursorClient:
         paras = [touch_state, x, y]
         self.my_socket.send(str(" ".join([str(item) for item in paras]) + "\n").encode())
     
-    def sendGlove(self, cmd):
+    def sendButton(self, cmd):
         self.my_socket.send((cmd+"\n").encode())
 
 
@@ -45,18 +45,21 @@ if __name__ == '__main__':
     if args.port:
         PORT = args.port
     my_remote_handle = CursorClient(IP, PORT)
+    # for gesture keyboard or cursor pad
     # my_remote_handle.send(1, 0.6, 0.75)
     # my_remote_handle.send(2, 0.25, 0.58)
     # my_remote_handle.send(2, 0.9, 0.75)
     # my_remote_handle.send(2, 0.85, 0.58)
     # my_remote_handle.send(3, 0.85, 0.58)
-    my_remote_handle.sendGlove('up')
+
+    # for button pad
+    my_remote_handle.sendButton('up')
     time.sleep(1)
-    my_remote_handle.sendGlove('left')
+    my_remote_handle.sendButton('left')
     time.sleep(1)
-    my_remote_handle.sendGlove('click')
+    my_remote_handle.sendButton('click')
     time.sleep(5)
-    my_remote_handle.sendGlove('up')
+    my_remote_handle.sendButton('up')
     time.sleep(1)
     my_remote_handle.close()
 

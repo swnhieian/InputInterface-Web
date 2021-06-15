@@ -3,10 +3,12 @@
 developed based on [simple-react-full-stack](https://github.com/crsandeep/simple-react-full-stack)
 
 ## Introduction
-The project consists of two components:
+The project consists of three components:
 + A gesture keyboard
 + A cursor pad
++ A button pad
 
+## Gesture Keyboard & Cursor Pad
 Use mouse (config on the webpage) or send data to `serverip:8081` use socket
 
 Data format:
@@ -16,7 +18,16 @@ Data format:
 + type == 3 means touchup
 + type == 4 means touchmove (between touches)
 
+See `socket-demo.py` as an example.
+
 `xpos` and `xpos` should be **normalized** to a float number in [0,1]
+## Button Pad
+Use keyboard (arrow keys for selection, space key for click) or send data to `serverip:8081` use socket
+
+Data format:
+`cmd`
++ `up`, `left`, `right`, `down` for selection
++ `click` for click
 
 See `socket-demo.py` as an example.
 
