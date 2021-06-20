@@ -9,6 +9,7 @@ import './app.css';
 import Gloves from './components/Gloves/gloves';
 import Grid from './components/Grid/Grid';
 import Keyboard from './components/Keyboard/keyboard';
+import Ninekeys from './components/NineKeys/ninekeys';
 import logo from './logo.png';
 
 
@@ -50,6 +51,9 @@ const Pagelayout = () => {
                   <Menu.Item key="/gloves" icon={<RocketOutlined />}>
                       <Link to="/gloves">Gloves</Link>
                     </Menu.Item>
+                    <Menu.Item key="/ninekeys" icon={<IconFont type="iconkeyboard" />}>
+                      <Link to="/ninekeys">Ninekeys</Link>
+                    </Menu.Item>
                 </Menu>
             </Sider>
           <Layout className="site-layout">
@@ -60,6 +64,7 @@ const Pagelayout = () => {
                           <Route path="/keyboard"><Keyboard /></Route>
                           <Route path="/grid"><Grid /></Route>
                           <Route path="/gloves"><Gloves /></Route>
+                          <Route path="/ninekeys"><Ninekeys /></Route>
                           <Route path="/">
                               Socket 发送数据地址：
 {ip}
