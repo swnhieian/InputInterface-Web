@@ -8,6 +8,7 @@ import { useLocation } from 'react-router-dom/cjs/react-router-dom.min';
 import './app.css';
 import Gloves from './components/Gloves/gloves';
 import Grid from './components/Grid/Grid';
+import ChineseIME from './components/ChineseIME/ChineseIME';
 import Keyboard from './components/Keyboard/keyboard';
 import Ninekeys from './components/NineKeys/ninekeys';
 import logo from './logo.png';
@@ -18,7 +19,7 @@ const {
 } = Layout;
 const { SubMenu } = Menu;
 const IconFont = createFromIconfontCN({
-    scriptUrl: '//at.alicdn.com/t/font_2182600_q59k4u1lj6a.js',
+    scriptUrl: '//at.alicdn.com/t/font_2182600_242a9qfnekj.js',
 });
 
 const Pagelayout = () => {
@@ -51,6 +52,10 @@ const Pagelayout = () => {
                   <Menu.Item key="/gloves" icon={<RocketOutlined />}>
                       <Link to="/gloves">Gloves</Link>
                     </Menu.Item>
+                    <Menu.Item key="/chinese" icon={<IconFont type="iconfuhao-zhongwen" />}>
+                      <Link to="/chinese">Chinese</Link>
+                    </Menu.Item>
+
                     <Menu.Item key="/ninekeys" icon={<IconFont type="iconkeyboard" />}>
                       <Link to="/ninekeys">Ninekeys</Link>
                     </Menu.Item>
@@ -64,6 +69,9 @@ const Pagelayout = () => {
                           <Route path="/keyboard"><Keyboard /></Route>
                           <Route path="/grid"><Grid /></Route>
                           <Route path="/gloves"><Gloves /></Route>
+                          <Route path="/chinese"><ChineseIME /></Route>
+
+
                           <Route path="/ninekeys"><Ninekeys /></Route>
                           <Route path="/">
                               Socket 发送数据地址：

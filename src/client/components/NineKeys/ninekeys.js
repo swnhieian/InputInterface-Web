@@ -70,8 +70,8 @@ const Ninekeys = () => {
         return ret;
     }
     const reducer = (state, action) => {
-        console.log('in reducer:');
-        console.log(state.code.toString());
+        console.log('in reducer:'+ (new Date()).getTime());
+        console.log(state.code.toString(), state.candidates.toString());
         switch (action.type) {
             case 0: //move
                 const dirs = [5, 2, 1, 0, 3, 6, 7, 8];
@@ -118,7 +118,7 @@ const Ninekeys = () => {
                 throw new Error();
         }
     };
-    const [state, dispatch] = useReducer(reducer, {pos: config.initPos, code: [], labels: keychars, userInput: '', candidates:[]});
+    const [state, dispatch] = useReducer(reducer, {pos: config.initPos, code: [], labels: keychars, userInput: '', candidates: []});
 
 
     useEffect(() => {
