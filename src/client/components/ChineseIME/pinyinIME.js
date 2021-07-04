@@ -76,7 +76,6 @@ class pinyinIME {
 
     FetchCandidatesList() {
         this.clearCandidatesList();
-        
         let entry = "";
         for (let idx = 0; idx <= 9; idx ++) {
             if (this.candidatesOffset + idx >= this.findSize) {
@@ -86,10 +85,7 @@ class pinyinIME {
             this.candidatesChinese[idx] = entry.substr(entry.lastIndexOf(" ") + 1);
             this.candidatesInput[idx] = entry.substring(0, entry.indexOf(" "));
         }
-
     }
-
-
 }
 
 export default pinyinIME;

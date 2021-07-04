@@ -46,11 +46,11 @@ if __name__ == '__main__':
         PORT = args.port
     my_remote_handle = CursorClient(IP, PORT)
     # for gesture keyboard or cursor pad
-    # my_remote_handle.send(1, 0.6, 0.75)
-    # my_remote_handle.send(2, 0.25, 0.58)
-    # my_remote_handle.send(2, 0.9, 0.75)
-    # my_remote_handle.send(2, 0.85, 0.58)
-    # my_remote_handle.send(3, 0.85, 0.58)
+    my_remote_handle.send(1, 0.6, 0.75)
+    my_remote_handle.send(2, 0.25, 0.58)
+    my_remote_handle.send(2, 0.9, 0.75)
+    my_remote_handle.send(2, 0.85, 0.58)
+    my_remote_handle.send(3, 0.85, 0.58)
 
     # for button pad
     my_remote_handle.sendButton('up')

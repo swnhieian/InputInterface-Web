@@ -10,12 +10,17 @@ import { FullScreen, useFullScreenHandle } from 'react-full-screen';
 import io from 'socket.io-client';
 import './keyboard.css';
 import Layout from './layout';
+import { Debugout } from 'debugout.js';
 
-
+const bugout = new Debugout({ useTimestamps: true, realTimeLoggingOn:true });
 const START = 1;
 const MOVE = 2;
 const END = 3;
 const EXPLORE = 4;
+const getTimestamp = () => {
+    return new Date().getTime();
+};
+let logTime = 0;
 const Keyboard = ({ cRef }) => {
     const canvasRef = useRef({ width: 450, height: 450 });
     const sampleSize = 50;
@@ -57,7 +62,7 @@ const Keyboard = ({ cRef }) => {
     useEffect(() => {
         const socket = io(`${document.domain}:8080`);
         socket.on('connect', () => {
-            console.log('connected!!');
+            console.log('connected!!!');
         });
         socket.on('data', onData);
         return function closeSocket() {
@@ -267,9 +272,12 @@ const Keyboard = ({ cRef }) => {
             pos.x *= canvasRef.current.width;
             pos.y *= canvasRef.current.height;
         }
+        let timestamp = getTimestamp();
         cursorPos.current = pos;
         switch (type) {
         case START:
+            bugout.log(timestamp+',start');
+            logTime = timestamp;
             userPath.current = [pos];
             isStart.current = true;
             break;
@@ -280,10 +288,12 @@ const Keyboard = ({ cRef }) => {
             }
             break;
         case END:
+            bugout.log(timestamp+',end');
             if (isStart.current) {
                 userPath.current.push(pos);
                 calculateCandidate();
             }
+            bugout.info('interval' + (timestamp - logTime));
             isStart.current = false;
             break;
         default:
