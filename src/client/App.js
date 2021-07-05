@@ -11,6 +11,7 @@ import Grid from './components/Grid/Grid';
 import ChineseIME from './components/ChineseIME/ChineseIME';
 import Keyboard from './components/Keyboard/keyboard';
 import Ninekeys from './components/NineKeys/ninekeys';
+import MorseCode from './components/MorseCode/MorseCode';
 import logo from './logo.png';
 
 
@@ -19,7 +20,7 @@ const {
 } = Layout;
 const { SubMenu } = Menu;
 const IconFont = createFromIconfontCN({
-    scriptUrl: '//at.alicdn.com/t/font_2182600_242a9qfnekj.js',
+    scriptUrl: '//at.alicdn.com/t/font_2182600_ha2zpj0eix.js',
 });
 
 const Pagelayout = () => {
@@ -49,6 +50,9 @@ const Pagelayout = () => {
                   <Menu.Item key="/grid" icon={<IconFont type="iconcursor" />}>
                       <Link to="/grid">Grid</Link>
                     </Menu.Item>
+                  <Menu.Item key="/morse" icon={<IconFont type="iconmorse-code" />}>
+                    <Link to="/morse">Morse Code</Link>
+                  </Menu.Item>
                   <Menu.Item key="/gloves" icon={<RocketOutlined />}>
                       <Link to="/gloves">Gloves</Link>
                     </Menu.Item>
@@ -69,6 +73,7 @@ const Pagelayout = () => {
                           <Route path="/keyboard"><Keyboard /></Route>
                           <Route path="/grid"><Grid /></Route>
                           <Route path="/gloves"><Gloves /></Route>
+                          <Route path="/morse"><MorseCode /></Route>
                           <Route path="/chinese"><ChineseIME /></Route>
 
 
