@@ -3,10 +3,11 @@
 developed based on [simple-react-full-stack](https://github.com/crsandeep/simple-react-full-stack)
 
 ## Introduction
-The project consists of three components:
+The project consists of 4 components:
 + A gesture keyboard
 + A cursor pad
 + A button pad
++ A morse code input interface (with audio feedback)
 
 ## Gesture Keyboard & Cursor Pad
 Use mouse (config on the webpage) or send data to `serverip:8081` use socket
@@ -30,6 +31,15 @@ Data format:
 + `click` for click
 
 See `socket-demo.py` as an example.
+
+## Morse Code
+Use keyboard (`←` for `di`, `→` for `da`, `space` for `space`, `ESC` for `reset`) or send data to `serverip:8081` use socket
+
+Data format:
+`cmd`
++ `di`, `da` for input
++ `space` for confirm
++ `reset` for cancel
 
 ## Run
 ```bash
