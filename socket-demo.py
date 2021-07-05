@@ -31,6 +31,9 @@ class CursorClient:
     
     def sendButton(self, cmd):
         self.my_socket.send((cmd+"\n").encode())
+    
+    def sendPressure(self, pressure):
+        self.my_socket.send((str(pressure)+"\n").encode())
 
 
 if __name__ == '__main__':
@@ -46,21 +49,36 @@ if __name__ == '__main__':
         PORT = args.port
     my_remote_handle = CursorClient(IP, PORT)
     # for gesture keyboard or cursor pad
-    my_remote_handle.send(1, 0.6, 0.75)
-    my_remote_handle.send(2, 0.25, 0.58)
-    my_remote_handle.send(2, 0.9, 0.75)
-    my_remote_handle.send(2, 0.85, 0.58)
-    my_remote_handle.send(3, 0.85, 0.58)
+    # my_remote_handle.send(1, 0.6, 0.75)
+    # my_remote_handle.send(2, 0.25, 0.58)
+    # my_remote_handle.send(2, 0.9, 0.75)
+    # my_remote_handle.send(2, 0.85, 0.58)
+    # my_remote_handle.send(3, 0.85, 0.58)
 
-    # for button pad
-    my_remote_handle.sendButton('up')
+    # # for button pad
+    # my_remote_handle.sendButton('up')
+    # time.sleep(1)
+    # my_remote_handle.sendButton('left')
+    # time.sleep(1)
+    # my_remote_handle.sendButton('click')
+    # time.sleep(5)
+    # my_remote_handle.sendButton('up')
+    # time.sleep(1)
+
+    # for pressure test
+    my_remote_handle.sendPressure(0.1)
     time.sleep(1)
-    my_remote_handle.sendButton('left')
+    my_remote_handle.sendPressure(0.13)
+    my_remote_handle.sendPressure(0.2)
     time.sleep(1)
-    my_remote_handle.sendButton('click')
-    time.sleep(5)
-    my_remote_handle.sendButton('up')
+    my_remote_handle.sendPressure(0.3)
     time.sleep(1)
+    my_remote_handle.sendPressure(0.4)
+    time.sleep(1)
+    my_remote_handle.sendPressure(0.38)
+    time.sleep(6)
+    my_remote_handle.sendPressure(0.41)
+
     my_remote_handle.close()
 
 

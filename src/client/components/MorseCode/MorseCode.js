@@ -173,7 +173,6 @@ const MorseCode = (props) => {
     return (
       <FullScreen handle={fullScreenHandle}>
       <Card title="Morse Code" extra={settingsExtra()} style={{height: '100%'}} bodyStyle={{height: '100%'}}>
-
       <Divider>Current Code</Divider>
       <Row>
         <Col>{state.code+"_"}</Col>
