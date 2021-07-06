@@ -5,6 +5,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { FullScreen, useFullScreenHandle } from "react-full-screen";
 import io from 'socket.io-client';
 import pinyinIME from './pinyinIME';
+import Selector from './Selector';
 
 
 
@@ -112,7 +113,9 @@ const ChineseIME = (props) => {
 
     return (
       <FullScreen handle={fullScreenHandle}>
-      <Card title="Cursor Pad" extra={settingsExtra()} style={{height: '100%'}} bodyStyle={{height: '100%'}}>
+      <Card title="Cursor Pad" extra={settingsExtra()} style={{height: '100%', textAlign:'center'}} bodyStyle={{height: '100%'}}>
+          <Selector data={['1','2','3','4']} radius={200}/>
+          <Divider></Divider>
         <Row style={{textAlign: 'center', height: '100%'}} justify="center" align="middle">
             <Col flex="1">
                 <canvas ref={canvasRef} width={canvasWidth} height={canvasHeight} onMouseMove={mouseMove}/>
