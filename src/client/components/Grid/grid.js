@@ -1,5 +1,5 @@
 import { FullscreenExitOutlined, FullscreenOutlined, SettingOutlined } from '@ant-design/icons';
-import { Card, Col, Divider, Drawer, Form, InputNumber, Row, Space, Switch } from 'antd';
+import { Card, Col, Divider, Drawer, Form, InputNumber, Row, Space, Switch, Button } from 'antd';
 import 'antd/dist/antd.css';
 import React, { useEffect, useRef, useState } from 'react';
 import { FullScreen, useFullScreenHandle } from "react-full-screen";
@@ -17,6 +17,9 @@ const Grid = (props) => {
     const [row, setRow] = useState(10);
     const [col, setCol] = useState(10);
     const fullScreenHandle = useFullScreenHandle();
+    const [hasTarget, setHasTarget] = useState(false);
+    const [target, setTarget] = useState({x: -1, y: -1});
+    const [targetSize, setTargetSize] = useState(2);
 
 
 
@@ -34,12 +37,35 @@ const Grid = (props) => {
             context.lineTo((i+1)*canvas.width / col, canvas.height);
         }
         context.stroke();
+        let targetX = -1;
+        let targetY = -1;
+        if (hasTarget) {
+            targetX = target.x;
+            targetY = target.y;
+            context.fillStyle = '#FFE194';
+            for (let i= 0; i< row; i++) {
+                for (let j = 0; j<col; j ++) {
+                    if (Math.abs(i - targetX) < targetSize && Math.abs(j - targetY) < targetSize) {
+                        context.fillRect(i*canvas.width / col, j*canvas.height/row, canvas.width/col, canvas.height/row);
+                    }
+                }
+            }
+            context.fillStyle = '#FFA900';
+            context.fillRect(targetX*canvas.width / col, targetY*canvas.height/row, canvas.width/col, canvas.height/row);
+        }
+        
         if (cursorPos.current != null) {
             let pos = cursorPos.current;
             let xindex = Math.floor(pos.x / canvas.width * col);
             let yindex = Math.floor(pos.y / canvas.height * row);
+            if (hasTarget && Math.abs(xindex - targetX) < targetSize && Math.abs(yindex - targetY) < targetSize) {
+                context.fillStyle = '#52c41a'
+            } else {
+                context.fillStyle = '#000000';
+            }
             context.fillRect(xindex*canvas.width / col, yindex*canvas.height/row, canvas.width/col, canvas.height/row);
-        }        
+        }
+        
     }
 
     useEffect(() => {
@@ -66,7 +92,7 @@ const Grid = (props) => {
 
     useEffect(() => {
         updateCanvas();
-    }, [canvasRef, cursorPos, canvasHeight, canvasWidth, row, col]);
+    }, [canvasRef, cursorPos, canvasHeight, canvasWidth, row, col, target, hasTarget, targetSize]);
 
     let mouseMove = (e) => {
         if (useMouse) {
@@ -107,10 +133,25 @@ const Grid = (props) => {
         labelAlign: 'left'
     };
 
+    const setRandomTarget = () => {
+        let targetX = Math.floor(Math.random() * row);
+        let targetY = Math.floor(Math.random() * col);
+        setTarget({x: targetX, y: targetY});
+    }
+
 
     return (
       <FullScreen handle={fullScreenHandle}>
       <Card title="Cursor Pad" extra={settingsExtra()} style={{height: '100%'}} bodyStyle={{height: '100%'}}>
+        <Row>
+            <Col span={4}>
+                <Switch checked={hasTarget} checkedChildren="有目标" unCheckedChildren="无目标" onChange={v=>{setHasTarget(v);setRandomTarget()}} />
+            </Col>
+            <Col span={4}>
+                <Button disabled={!hasTarget} onClick={e=>setRandomTarget()}>Set Random Target</Button>
+            </Col>
+        </Row>
+        
         <Row style={{textAlign: 'center', height: '100%'}} justify="center" align="middle">
             <Col flex="1">
                 <canvas ref={canvasRef} width={canvasWidth} height={canvasHeight} onMouseMove={mouseMove}/>
@@ -156,6 +197,9 @@ const Grid = (props) => {
                                 </Form.Item>
                             </Col>
                         </Row>
+                    </Form.Item>
+                    <Form.Item label="目标大小" layout='horizontal'>
+                                    <InputNumber style={{'width': '100%'}} min={1} max={Math.min(row, col)} onChange={v=>setTargetSize(v)} value={targetSize} />
                     </Form.Item>
                 </Form>
             </Drawer>

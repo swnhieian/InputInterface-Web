@@ -14,6 +14,6 @@ fullData.split('\t').map(item => {
         }
     }
 })
-console.log(imeData);
+// console.log(imeData);
 console.assert(imeData.length >= 2500, 'not 2500 freq used characters!');
 export default imeData;
