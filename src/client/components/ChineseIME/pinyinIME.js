@@ -5,14 +5,20 @@ let imeMaxLength = 67;
 
 class pinyinIME {
     constructor() {
-        this.imeData = imeData.split('	');
+        this.imeData = imeData;
         this.imeDataSize = this.imeData.length;
-        this.FindEntries('jintian');
+        // this.FindEntries('jintian');
+        // this.FetchCandidatesList();
+        // console.log("====================");
+        // console.log(this.candidatesChinese);
+        // console.log(this.candidatesInput);
+        // console.log("====================");
+    }
+
+    decode(pinyin) {
+        this.FindEntries(pinyin);
         this.FetchCandidatesList();
-        console.log("====================");
-        console.log(this.candidatesChinese);
-        console.log(this.candidatesInput);
-        console.log("====================");
+        return this.candidatesChinese;
     }
 
     clearCandidatesList() {
@@ -77,7 +83,7 @@ class pinyinIME {
     FetchCandidatesList() {
         this.clearCandidatesList();
         let entry = "";
-        for (let idx = 0; idx <= 9; idx ++) {
+        for (let idx = 0; idx <= 1000; idx ++) {
             if (this.candidatesOffset + idx >= this.findSize) {
                 break;
             }

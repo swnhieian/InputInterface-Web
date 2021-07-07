@@ -1,7 +1,7 @@
 import { FullscreenExitOutlined, FullscreenOutlined, SettingOutlined } from '@ant-design/icons';
 import { Card, Col, Divider, Drawer, Form, InputNumber, Row, Space, Switch } from 'antd';
 import 'antd/dist/antd.css';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useReducer } from 'react';
 import { FullScreen, useFullScreenHandle } from "react-full-screen";
 import io from 'socket.io-client';
 import pinyinIME from './pinyinIME';
@@ -21,29 +21,142 @@ const ChineseIME = (props) => {
     const [col, setCol] = useState(10);
     const fullScreenHandle = useFullScreenHandle();
 
+    //level 0: ab cd ef g    1: hi jk lm n   2 op qr st   3  uv wx yz
+    //确定 1
+    //取消
+    // state: 
+    //   message: 
+    //   candidates, candidatePos,
+    //   input: 已输入的拼音串，待解码
+    //   level
+    //   currentInput
+    //   status: 'idle'(level:-1) -> 'input' (level, prefix[]) -> 'candidates'
 
-
-    let updateCanvas = () => {
-        let canvas = canvasRef.current;
-        let context = canvas.getContext('2d');
-        context.clearRect(0, 0, canvas.width, canvas.height);
-        context.beginPath();
-        for (let i = 0; i < row - 1; i++) {
-            context.moveTo(0, (i+1)*canvas.height / row);
-            context.lineTo(canvas.width, (i+1)*canvas.height / row);
-        }
-        for (let i = 0; i < col - 1; i++) {
-            context.moveTo((i+1)*canvas.width / col, 0);
-            context.lineTo((i+1)*canvas.width / col, canvas.height);
-        }
-        context.stroke();
-        if (cursorPos.current != null) {
-            let pos = cursorPos.current;
-            let xindex = Math.floor(pos.x / canvas.width * col);
-            let yindex = Math.floor(pos.y / canvas.height * row);
-            context.fillRect(xindex*canvas.width / col, yindex*canvas.height/row, canvas.width/col, canvas.height/row);
-        }        
+    const actionToIndex = (action) => {
+        const actionData = ['click', 'up', 'right', 'down', 'left'];
+        let idx = actionData.indexOf(action);
+        if (idx < 0) idx = 0;
+        return idx;
     }
+    const getCandidateMsg = (candidates, startPos) => {
+        const size = 3;
+        while (startPos + size > candidates.length) {
+            candidates.push('');
+        }
+        return [candidates[startPos + 0], candidates[startPos + 1], '下一页', candidates[startPos + 2], startPos == 0? '取消': '上一页'];
+    }
+    const getCharMsg = (ch) => {
+        let len = Math.floor((ch.length + 3) / 4);
+        let ret = ['返回']
+        let tempCh = ch;
+        for (let i = 0; i < 4; i++) {
+            ret.push(tempCh.slice(0, Math.min(tempCh.length, len)));
+            tempCh = tempCh.slice(len);
+        }
+        return ret;
+    }
+    const reducer = (state, action) => {
+        const data = ['确定', 'abcdefg', 'hijklmn', 'opqrst', 'uvwxyz'];
+        let op = actionToIndex(action);
+        switch (state.status) {
+            case 'idle':
+                if (op === 0) { //enter; to decode candidates
+                    if (state.input.length > 0) { 
+                        let candidates = IME.decode(state.input);
+                        console.log(candidates);
+                        return {
+                            ...state,
+                            status: 'candidates',
+                            candidatePos: 0,
+                            candidates: candidates,
+                            message: getCandidateMsg(candidates, 0)
+                        };
+                    }
+                } else { //slide; to input level 0 characters
+                    return {
+                        ...state,
+                        status: 'input',
+                        level: 1,
+                        prefix: [data],
+                        message: getCharMsg(data[op])
+                    }
+                }
+                return state;
+            case 'input':
+                if (op === 0) { //back; to input last level  or  back to idle
+                    return {
+                        ...state,
+                        status: state.level === 1 ? 'idle': 'input',
+                        level: state.level - 1,
+                        message: state.level ===1 ? data : getCharMsg(state.prefix[state.level - 1]),
+                        prefix: state.prefix.slice(0, state.level - 1)
+                    };
+                } else { // continue input;
+                    let result = state.message[op];
+                    let newInput = state.input;
+                    if (result.length === 1) {
+                        newInput = state.input + result;
+                    }
+                    if (result.length === 0) return state;
+                    return {
+                        ...state,
+                        status: result.length === 1? 'idle': 'input',
+                        input: newInput,
+                        level: state.level + 1,
+                        message: result.length === 1? data: getCharMsg(state.message[op]),
+                        prefix: result.length === 1? []: [...state.prefix, getCharMsg(state.message[op])]
+                    }
+                }
+                return state;
+            case 'candidates':
+                if (op === 2 || op === 4) { // 2, next page;;;; 4, previous page
+                    let newCandiatePos = state.candidatePos + 3 * (3  - op);
+                    if (newCandiatePos < 0) { //cancel input
+                        return {
+                            ...state,
+                            status: 'idle',
+                            level: 0,
+                            message: data,
+                            input: ''
+                        }
+                    } else if (newCandiatePos >= state.candidates.length) {
+                        return state;
+                    } else {
+                        return {
+                            ...state,
+                            status: 'candidates',
+                            message: getCandidateMsg(state.candidates, newCandiatePos),
+                            candidatePos: newCandiatePos
+                        }
+                    }
+                } else { //select candidates
+                    let cand = state.message[op];
+                    if (cand.length > 0) {
+                        return {
+                            ...state,
+                            commit: state.commit + cand,
+                            status: 'idle',
+                            input: '',
+                            level: 0,
+                            message: data,
+                            prefix: []
+                        }
+                    }
+                }
+            default:
+                return state;
+        }
+        // const keyData = {
+        //     'data': ['确定', 'abcdefg', 'hijklmn', 'opqrst', 'uvwxya'],
+        //     'abcdefg': {
+        //         data: ['返回', 'abc', 'def', 'g']
+        //     }
+      
+    }
+
+    const [state, dispatch] = useReducer(reducer, {'status': 'idle', message: ['确定', 'abcdefg', 'hijklmn', 'opqrst', 'uvwxyz'], prefix: [], input: '', commit: ''});
+
+
 
     useEffect(() => {
         console.log("trying to connect to "+ document.domain+':8080');
@@ -54,30 +167,48 @@ const ChineseIME = (props) => {
         socket.on('data', function(data) {
             let lines = data.split('\n');
             lines.forEach(element => {
-                let items = element.split(' ');
-                if (items.length > 1) {     
-                    cursorPos.current = {x: parseFloat(items[1])*canvasRef.current.width, y: parseFloat(items[2])*canvasRef.current.height};
-                    updateCanvas();
+                if (element.length > 0) {
+                    console.log('[socket] dispatch : ' + element);
+                    dispatch(element);
                 }
             });
         });
-        updateCanvas();
         return function closeSocket() {
             socket.close();
         }
     }, []);
 
     useEffect(() => {
-        updateCanvas();
-    }, [canvasRef, cursorPos, canvasHeight, canvasWidth, row, col]);
+        window.addEventListener('keydown', (event) => {
+            console.log("in key down|" + event.code+"|");
+            switch (event.code) {
+                case 'ArrowLeft':
+                    event.preventDefault();
+                    dispatch('left');
+                    return;
+                case 'ArrowRight':
+                    event.preventDefault();
+                    dispatch('right');
+                    return;
+                case 'Space':
+                    event.preventDefault();
+                    dispatch('click');
+                    return;
+                case 'ArrowUp':
+                    event.preventDefault();
+                    dispatch('up');
+                    return;
+                case 'ArrowDown':
+                    event.preventDefault();
+                    dispatch('down');
+                    return;
+                default:
+                    return;
+            }
+        });
+    }, []);
 
-    let mouseMove = (e) => {
-        if (useMouse) {
-            let position = windowToCanvas(canvasRef.current, e.clientX, e.clientY);
-            cursorPos.current = position;
-            updateCanvas();
-        }
-    }
+    
 
     let windowToCanvas = (c, x, y) => {
         let rect = c.getBoundingClientRect()
@@ -113,56 +244,17 @@ const ChineseIME = (props) => {
 
     return (
       <FullScreen handle={fullScreenHandle}>
-      <Card title="Cursor Pad" extra={settingsExtra()} style={{height: '100%', textAlign:'center'}} bodyStyle={{height: '100%'}}>
-          <Selector data={['1','2','3','4']} radius={200}/>
-          <Divider></Divider>
-        <Row style={{textAlign: 'center', height: '100%'}} justify="center" align="middle">
-            <Col flex="1">
-                <canvas ref={canvasRef} width={canvasWidth} height={canvasHeight} onMouseMove={mouseMove}/>
-            </Col>
-        </Row>
+      <Card title="中文输入" extra={settingsExtra()} style={{height: '100%', textAlign:'center'}} bodyStyle={{height: '100%'}}>
+          <h3>当前中文输入：{state.commit + '_'}</h3>
+          <h3>当前拼音串：{state.input + '_'}</h3>
+          <Selector data={state.message} radius={200} hasCenter={true}/>
+          <Divider>键盘绑定</Divider>
+          方向键+空格键
         <Drawer 
               visible={showSettings} 
               onClose={settingsClosed}
               width={720}
               title='设置'>
-                <Form layout='horizontal' {...formLayout}>
-                    <Form.Item label="绑定鼠标事件">
-                        <Switch checked={useMouse} onChange={v=>setUseMouse(v)} />
-                    </Form.Item>
-                    <Divider>参数</Divider>
-                    <Form.Item label="输入区域大小">
-                        <Row gutter={16}>
-                            <Col flex={1}>
-                                <Form.Item label="宽(0-1000)" layout='horizontal'>
-                                    <InputNumber min={0} max={1000} onChange={v=>setCanvasWidth(v)} value={canvasWidth} />
-                                </Form.Item>
-                            </Col>
-                            
-                            <Col flex={1}>
-                                <Form.Item label="高(0-1000)" layout='horizontal'>
-                                    <InputNumber min={0} max={1000} onChange={v=>setCanvasHeight(v)} value={canvasHeight} />
-                                </Form.Item>
-                            </Col>
-                        </Row>
-                    </Form.Item>
-
-                    <Form.Item label="行列数">
-                        <Row gutter={16}>
-                            <Col flex={1}>
-                                <Form.Item label="行" layout='horizontal'>
-                                    <InputNumber style={{'width': '100%'}} min={0} max={canvasRef.current.height} onChange={v=>setRow(v)} value={row} />
-                                </Form.Item>
-                            </Col>
-                            
-                            <Col flex={1}>
-                                <Form.Item label="列" layout='horizontal'>
-                                    <InputNumber style={{'width': '100%'}} min={0} max={canvasRef.current.width} onChange={v=>setCol(v)} value={col} />
-                                </Form.Item>
-                            </Col>
-                        </Row>
-                    </Form.Item>
-                </Form>
             </Drawer>
       </Card>   
       </FullScreen> 
