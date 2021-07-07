@@ -11,14 +11,7 @@ import Selector from './Selector';
 
 const ChineseIME = (props) => {
     const IME = new pinyinIME();
-    const canvasRef = useRef({'width':450,'height':450});
-    const cursorPos = useRef(null);
     const [showSettings, setShowSettings] = useState(false);
-    const [useMouse, setUseMouse] = useState(false);
-    const [canvasWidth, setCanvasWidth] = useState(450);
-    const [canvasHeight, setCanvasHeight] = useState(450);
-    const [row, setRow] = useState(10);
-    const [col, setCol] = useState(10);
     const fullScreenHandle = useFullScreenHandle();
 
     //level 0: ab cd ef g    1: hi jk lm n   2 op qr st   3  uv wx yz
@@ -208,14 +201,6 @@ const ChineseIME = (props) => {
         });
     }, []);
 
-    
-
-    let windowToCanvas = (c, x, y) => {
-        let rect = c.getBoundingClientRect()
-        let xpos = x - rect.left * (c.width / rect.width);
-        let ypos = y - rect.top * (c.height/ rect.height);
-        return {x: xpos, y: ypos};
-    }
 
     let settingsExtra = () => (
         <Space>

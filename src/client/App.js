@@ -1,4 +1,4 @@
-import { createFromIconfontCN, HomeOutlined, RocketOutlined } from '@ant-design/icons';
+import { createFromIconfontCN, HomeOutlined, RocketOutlined, MacCommandOutlined } from '@ant-design/icons';
 import { Layout, Menu } from 'antd';
 import React, { useEffect, useState } from 'react';
 import {
@@ -14,6 +14,7 @@ import Ninekeys from './components/NineKeys/ninekeys';
 import MorseCode from './components/MorseCode/MorseCode';
 import PressureTest from './components/Pressure/PressureTest';
 import logo from './logo.png';
+import Command from './components/Command/command';
 
 
 const {
@@ -63,6 +64,10 @@ const Pagelayout = () => {
                     <Menu.Item key="/chinese" icon={<IconFont type="iconfuhao-zhongwen" />}>
                       <Link to="/chinese">Chinese</Link>
                     </Menu.Item>
+                    <Menu.Item key="/command" icon={<MacCommandOutlined />}>
+                      <Link to="/command">Command</Link>
+                    </Menu.Item>
+                    
 
                     <Menu.Item key="/ninekeys" icon={<IconFont type="iconkeyboard" />}>
                       <Link to="/ninekeys">Ninekeys</Link>
@@ -80,6 +85,7 @@ const Pagelayout = () => {
                           <Route path="/morse"><MorseCode /></Route>
                           <Route path="/pressure"><PressureTest /></Route>
                           <Route path="/chinese"><ChineseIME /></Route>
+                          <Route path="/command"><Command /></Route>
 
 
                           <Route path="/ninekeys"><Ninekeys /></Route>
