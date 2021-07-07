@@ -11,6 +11,7 @@ import io from 'socket.io-client';
 import './keyboard.css';
 import Layout from './layout';
 import { Debugout } from 'debugout.js';
+import Selector from '../ChineseIME/Selector';
 
 const bugout = new Debugout({ useTimestamps: true, realTimeLoggingOn:true });
 const START = 1;
@@ -293,7 +294,7 @@ const Keyboard = ({ cRef }) => {
                 userPath.current.push(pos);
                 calculateCandidate();
             }
-            bugout.info('interval' + (timestamp - logTime));
+            bugout.log('interval,' + (timestamp - logTime));
             isStart.current = false;
             break;
         default:
@@ -457,6 +458,7 @@ const Keyboard = ({ cRef }) => {
                                     </List.Item>
                               )}
                             />
+                            <Selector data={candidates.length>0?[candidates[0][0], candidates[1][0], candidates[2][0], candidates[3][0]]:[]} radius={150}/>
                         </Col>
                     </Row>
 
@@ -533,6 +535,14 @@ const Keyboard = ({ cRef }) => {
                     </Drawer>
                 </Card>
             </FullScreen>
+
+            <Card title="Log" style={{ height: '100%' }} bodyStyle={{ height: '100%' }}>
+                    <Row style={{ textAlign: 'center', height: '100%' }} justify="center" align="middle">
+                        <pre>
+                            {bugout.getLog()}
+                        </pre>
+                    </Row>
+                </Card>
         </div>
     );
 };

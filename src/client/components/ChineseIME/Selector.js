@@ -11,8 +11,9 @@ const Selector = (props) => {
     let items = data.map((item, no) => {
         let angle = Math.PI / 2 - no * angleStep;
         let width = radius * Math.sin(angleStep / 2);
-        let xpos = radius + radius*0.8 * Math.cos(angle) - width /2;
-        let ypos = radius - radius*0.8 * Math.sin(angle);
+        let posFactor = hasCenter?0.8:0.5;
+        let xpos = radius + radius*posFactor * Math.cos(angle) - width /2;
+        let ypos = radius - radius*posFactor * Math.sin(angle);
         return (
                 <div key={no} style={{display: 'inline-block', position: 'absolute', left: xpos+'px', top: ypos+'px', width: width+'px', textAlign:'center', height: '1.25em', lineHeight:'1.25', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>
                     {item}
