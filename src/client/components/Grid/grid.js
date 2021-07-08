@@ -4,7 +4,9 @@ import 'antd/dist/antd.css';
 import React, { useEffect, useRef, useState } from 'react';
 import { FullScreen, useFullScreenHandle } from "react-full-screen";
 import io from 'socket.io-client';
+import { Debugout } from 'debugout.js';
 
+const bugout = new Debugout({ useTimestamps: true, realTimeLoggingOn:true });
 
 
 const Grid = (props) => {
@@ -21,6 +23,9 @@ const Grid = (props) => {
     const [target, setTarget] = useState({x: -1, y: -1});
     const [targetSize, setTargetSize] = useState(2);
 
+    const [reached, setReached] = useState(false);
+    const [lastTime, setLasttime] = useState(0);
+    const [logOutput, setLogoutput] = useState('');
 
 
     let updateCanvas = () => {
@@ -60,6 +65,13 @@ const Grid = (props) => {
             let yindex = Math.floor(pos.y / canvas.height * row);
             if (hasTarget && Math.abs(xindex - targetX) < targetSize && Math.abs(yindex - targetY) < targetSize) {
                 context.fillStyle = '#52c41a'
+                let timeStamp = new Date().getTime();
+                if (!reached) {
+                    bugout.log('reach', timeStamp);
+                    bugout.log('time', timeStamp - lastTime);
+                    setLogoutput(bugout.getLog());
+                    setReached(true);
+                }
             } else {
                 context.fillStyle = '#000000';
             }
@@ -140,6 +152,11 @@ const Grid = (props) => {
         let targetX = Math.floor(Math.random() * row);
         let targetY = Math.floor(Math.random() * col);
         setTarget({x: targetX, y: targetY});
+        let timeStamp = new Date().getTime();
+        bugout.log('setTarget', timeStamp);
+        setLogoutput(bugout.getLog());
+        setLasttime(timeStamp);
+        setReached(false);
     }
 
     const switchChange = (v) => {
@@ -148,6 +165,23 @@ const Grid = (props) => {
         console.log(hasTarget);
         setRandomTarget();
     }
+
+    useEffect(() => {
+        window.addEventListener('keydown', (event) => {
+            console.log("in key down|" + event.code+"|");
+            switch (event.code) {
+                case 'Space':
+                    event.preventDefault();
+                    let timeStamp = new Date().getTime();
+                    bugout.log('timeStamp', timeStamp);
+                    setLogoutput(bugout.getLog());
+                    return;
+                default:
+                    return;
+            }
+        });
+    }, []);
+
 
 
     return (
@@ -214,6 +248,10 @@ const Grid = (props) => {
                 </Form>
             </Drawer>
       </Card>   
+      <Card title="Cursor Pad" style={{height: '100%'}} bodyStyle={{height: '100%'}}>
+      <Button onClick={e=>{bugout.clear();setLogoutput(bugout.getLog());}}>Clear Log</Button>
+          <pre>{logOutput}</pre>
+      </Card>
       </FullScreen> 
     );
 }
