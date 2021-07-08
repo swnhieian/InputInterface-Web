@@ -475,10 +475,12 @@ const Keyboard = ({ cRef }) => {
                     if (state.isStart) {
                         bugout.log('interval,' + (timestamp - state.logTime));
                         let path = [...state.userPath, pos];
+                        let cands = calculateCandidate(path);
                         newState = {
                             ...state,
                             cursorPos: pos,
-                            candidates: calculateCandidate(path),
+                            candidates: cands,
+                            text: cands.length > 0?cands[0]:'',
                             userPath: path,
                             isStart: false
                         }
