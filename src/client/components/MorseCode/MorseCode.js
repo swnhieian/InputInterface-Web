@@ -6,13 +6,19 @@ import { FullScreen, useFullScreenHandle } from "react-full-screen";
 import io from 'socket.io-client';
 
 let diAudio = new Audio('/di.mp3');
+diAudio.volume = 1.0;
 let daAudio = new Audio('/da.mp3');
+daAudio.volume = 1.0;
 let spaceAudio = new Audio('/space.mp3');
+spaceAudio.volume = 1.0;
 let resetAudio = new Audio('/reset.mp3');
+resetAudio.volume = 1.0;
 let invalidAudio = new Audio('/invalid.mp3');
+invalidAudio.volume = 1.0;
 let letterAudios = [];
 for (let i = 0; i < 26; i++) {
         let a = new Audio('/ios11_50_' + String.fromCharCode('a'.charCodeAt(0) + i) + '.wav');
+        a.volume = 1.0;
         letterAudios.push(a);
     }
 
@@ -34,11 +40,11 @@ const MorseCode = (props) => {
         window.addEventListener('keydown', (event) => {
             console.log("in key down|" + event.code+"|");
             switch (event.code) {
-                case 'ArrowLeft':
+                case 'ArrowUp':
                     event.preventDefault();
                     dispatch('di');
                     return;
-                case 'ArrowRight':
+                case 'ArrowDown':
                     event.preventDefault();
                     dispatch('da');
                     return;
@@ -47,6 +53,7 @@ const MorseCode = (props) => {
                     dispatch('space');
                     return;
                 case 'Escape':
+                case 'Backspace':
                     event.preventDefault();
                     dispatch('reset');
                     return;
@@ -159,11 +166,11 @@ const MorseCode = (props) => {
 
     const bindingsData = [
         {
-          key: '←',
+          key: '↑/Up',
           function: 'Di/·'
         },
         {
-          key: '→',
+          key: '↓/Down',
           function: 'Da/-'
         },
         {
@@ -202,91 +209,91 @@ const MorseCode = (props) => {
       </Row>
       <Divider plain>Codes</Divider>
       <Row>
-          <div className="ant-table ant-table-bordered" style={{width: '100%'}}>
+          <div className="ant-table ant-table-bordered" style={{width: '100%', fontSize: '1.2em', fontWeight: 'bolder'}}>
               <div className="ant-table-container">
                   <div className="ant-table-content">
           <table>
               <thead className="ant-table-thead">
               <tr>
-                <th className="ant-table-cell">Character</th>
+                <th className="ant-table-cell">Char</th>
                 <th className="ant-table-cell">Code</th>
-                <th className="ant-table-cell">Character</th>
+                <th className="ant-table-cell">Char</th>
                 <th className="ant-table-cell">Code</th>
-                <th className="ant-table-cell">Character</th>
+                <th className="ant-table-cell">Char</th>
                 <th className="ant-table-cell">Code</th>
-                <th className="ant-table-cell">Character</th>
+                <th className="ant-table-cell">Char</th>
                 <th className="ant-table-cell">Code</th>
-                <th className="ant-table-cell">Character</th>
+                <th className="ant-table-cell">Char</th>
                 <th className="ant-table-cell">Code</th>
-                <th className="ant-table-cell">Character</th>
+                <th className="ant-table-cell">Char</th>
                 <th className="ant-table-cell">Code</th>
-                <th className="ant-table-cell">Character</th>
+                <th className="ant-table-cell">Char</th>
                 <th className="ant-table-cell">Code</th>
               </tr></thead>
               <tbody className="ant-table-tbody">
                 <tr className="ant-table-row ant-table-row-level-0">
                   <td className="ant-table-cell">A</td>
-                  <td className="ant-table-cell">·-</td>
+                  <td className="ant-table-cell">• — </td>
                   <td className="ant-table-cell">B</td>
-                  <td className="ant-table-cell">-···</td>
+                  <td className="ant-table-cell">— • • • </td>
                   <td className="ant-table-cell">C</td>
-                  <td className="ant-table-cell">-·-·</td>
+                  <td className="ant-table-cell">— • — • </td>
                   <td className="ant-table-cell">D</td>
-                  <td className="ant-table-cell">-··</td>
+                  <td className="ant-table-cell">— • • </td>
                   <td className="ant-table-cell">E</td>
-                  <td className="ant-table-cell">·</td>
+                  <td className="ant-table-cell">• </td>
                   <td className="ant-table-cell">F</td>
-                  <td className="ant-table-cell">··-·</td>
+                  <td className="ant-table-cell">• • — • </td>
                   <td className="ant-table-cell">G</td>
-                  <td className="ant-table-cell">--·</td>
+                  <td className="ant-table-cell">— — • </td>
                 </tr>
                 <tr className="ant-table-row ant-table-row-level-0">
                   <td className="ant-table-cell">H</td>
-                  <td className="ant-table-cell">····</td>
+                  <td className="ant-table-cell">• • • • </td>
                   <td className="ant-table-cell">I</td>
-                  <td className="ant-table-cell">··</td>
+                  <td className="ant-table-cell">• • </td>
                   <td className="ant-table-cell">J</td>
-                  <td className="ant-table-cell">·---</td>
+                  <td className="ant-table-cell">• — — — </td>
                   <td className="ant-table-cell">K</td>
-                  <td className="ant-table-cell">-·-</td>
+                  <td className="ant-table-cell">— • — </td>
                   <td className="ant-table-cell">L</td>
-                  <td className="ant-table-cell">·-··</td>
+                  <td className="ant-table-cell">• — • • </td>
                   <td className="ant-table-cell">M</td>
-                  <td className="ant-table-cell">--</td>
+                  <td className="ant-table-cell">— — </td>
                   <td className="ant-table-cell">N</td>
-                  <td className="ant-table-cell">-·</td>
+                  <td className="ant-table-cell">— • </td>
                 </tr>
                 <tr className="ant-table-row ant-table-row-level-0">
                   <td className="ant-table-cell">O</td>
-                  <td className="ant-table-cell">---</td>
+                  <td className="ant-table-cell">— — — </td>
                   <td className="ant-table-cell">P</td>
-                  <td className="ant-table-cell">·--·</td>
+                  <td className="ant-table-cell">• — — • </td>
                   <td className="ant-table-cell">Q</td>
-                  <td className="ant-table-cell">--·-</td>
+                  <td className="ant-table-cell">— — • — </td>
                   <td className="ant-table-cell"></td>
                   <td className="ant-table-cell"></td>
                   <td className="ant-table-cell">R</td>
-                  <td className="ant-table-cell">·-·</td>
+                  <td className="ant-table-cell">• — • </td>
                   <td className="ant-table-cell">S</td>
-                  <td className="ant-table-cell">···</td>
+                  <td className="ant-table-cell">• • • </td>
                   <td className="ant-table-cell">T</td>
-                  <td className="ant-table-cell">-</td>
+                  <td className="ant-table-cell">— </td>
                 </tr>
                 <tr className="ant-table-row ant-table-row-level-0">
                   <td className="ant-table-cell">U</td>
-                  <td className="ant-table-cell">··-</td>
+                  <td className="ant-table-cell">• • — </td>
                   <td className="ant-table-cell">V</td>
-                  <td className="ant-table-cell">···-</td>
+                  <td className="ant-table-cell">• • • — </td>
                   <td className="ant-table-cell">W</td>
-                  <td className="ant-table-cell">·--</td>
+                  <td className="ant-table-cell">• — — </td>
                   <td className="ant-table-cell"></td>
                   <td className="ant-table-cell"></td>
                   <td className="ant-table-cell">X</td>
-                  <td className="ant-table-cell">-··-</td>
+                  <td className="ant-table-cell">— • • — </td>
                   <td className="ant-table-cell">Y</td>
-                  <td className="ant-table-cell">-·--</td>
+                  <td className="ant-table-cell">— • — — </td>
                   <td className="ant-table-cell">Z</td>
-                  <td className="ant-table-cell">--··</td>
+                  <td className="ant-table-cell">— — • • </td>
                 </tr>
               </tbody>
           </table></div></div>
