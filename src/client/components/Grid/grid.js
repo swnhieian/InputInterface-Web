@@ -1,7 +1,7 @@
 import { FullscreenExitOutlined, FullscreenOutlined, SettingOutlined } from '@ant-design/icons';
 import { Card, Col, Divider, Drawer, Form, InputNumber, Row, Space, Switch, Button } from 'antd';
 import 'antd/dist/antd.css';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useReducer, useRef, useState } from 'react';
 import { FullScreen, useFullScreenHandle } from "react-full-screen";
 import io from 'socket.io-client';
 import { Debugout } from 'debugout.js';
@@ -11,7 +11,7 @@ const bugout = new Debugout({ useTimestamps: true, realTimeLoggingOn:true });
 
 const Grid = (props) => {
     const canvasRef = useRef({'width':450,'height':450});
-    const cursorPos = useRef(null);
+    //const cursorPos = useRef(null);
     const [showSettings, setShowSettings] = useState(false);
     const [useMouse, setUseMouse] = useState(false);
     const [canvasWidth, setCanvasWidth] = useState(450);
@@ -27,6 +27,17 @@ const Grid = (props) => {
     const [lastTime, setLasttime] = useState(0);
     const [logOutput, setLogoutput] = useState('');
 
+
+    
+
+    const reducer = (state, action) => {
+        return {
+            ...state,
+            cursorPos: action
+        }
+    };
+
+    const [state, dispatch] = useReducer(reducer, {cursorPos: {x: -1, y: -1}});
 
     let updateCanvas = () => {
         let canvas = canvasRef.current;
@@ -59,8 +70,8 @@ const Grid = (props) => {
             context.fillRect(targetX*canvas.width / col, targetY*canvas.height/row, canvas.width/col, canvas.height/row);
         }
         
-        if (cursorPos.current != null) {
-            let pos = cursorPos.current;
+        if (state.cursorPos != null) {
+            let pos = state.cursorPos;
             let xindex = Math.floor(pos.x / canvas.width * col);
             let yindex = Math.floor(pos.y / canvas.height * row);
             if (hasTarget && Math.abs(xindex - targetX) < targetSize && Math.abs(yindex - targetY) < targetSize) {
@@ -80,39 +91,42 @@ const Grid = (props) => {
         
     }
 
-    console.log("trying to connect to "+ document.domain+':8080');
-    const socket = io(document.domain+':8080');     
+    // let socket;
     useEffect(() => {
-           
+        console.log("trying to connect to "+ document.domain+':8080');
+        const socket = io(document.domain+':8080');
+        socket.on('connect', () => {
+            console.log(document.domain+':8080'+'connected!!');
+        });
+        socket.on('data', function(data) {
+            let lines = data.split('\n');
+            lines.forEach(element => {
+                let items = element.split(' ');
+                if (items.length > 1) {
+                    dispatch({x: parseFloat(items[1])*canvasRef.current.width, y: parseFloat(items[2])*canvasRef.current.height})
+                    // cursorPos.current = {x: parseFloat(items[1])*canvasRef.current.width, y: parseFloat(items[2])*canvasRef.current.height};
+                    updateCanvas();
+                }
+            });
+        });
+        updateCanvas();
+        return function closeSocket() {
+            socket.close();
+        }
+        
     }, []);
 
     useEffect(() => {
-        if (!socket.connected) {
-            socket.on('connect', () => {
-                console.log(document.domain+':8080'+'connected!!');
-            });
-            socket.on('data', function(data) {
-                let lines = data.split('\n');
-                lines.forEach(element => {
-                    let items = element.split(' ');
-                    if (items.length > 1) {     
-                        cursorPos.current = {x: parseFloat(items[1])*canvasRef.current.width, y: parseFloat(items[2])*canvasRef.current.height};
-                        updateCanvas();
-                    }
-                });
-            });
-            updateCanvas();
-            return function closeSocket() {
-                socket.close();
-            }
-        }
+        // if (!socket.connected) {
+            
+        // }
         updateCanvas();
-    }, [canvasRef, cursorPos, canvasHeight, canvasWidth, row, col, target, hasTarget, targetSize]);
+    }, [state, canvasRef, canvasHeight, canvasWidth, row, col, target, hasTarget, targetSize]);
 
     let mouseMove = (e) => {
         if (useMouse) {
             let position = windowToCanvas(canvasRef.current, e.clientX, e.clientY);
-            cursorPos.current = position;
+            dispatch(position);
             updateCanvas();
         }
     }
@@ -160,9 +174,7 @@ const Grid = (props) => {
     }
 
     const switchChange = (v) => {
-        console.log(v);
         setHasTarget(v);
-        console.log(hasTarget);
         setRandomTarget();
     }
 

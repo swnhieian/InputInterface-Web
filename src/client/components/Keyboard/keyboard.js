@@ -47,6 +47,7 @@ const Keyboard = ({ cRef }) => {
     const [canvasWidth, setCanvasWidth] = useState(450);
     const [canvasHeight, setCanvasHeight] = useState(450);
     const fullScreenHandle = useFullScreenHandle();
+    const [inputText, setInputText] = useState('');
 
 
     const layout = useRef(null);
@@ -71,13 +72,47 @@ const Keyboard = ({ cRef }) => {
         };
     }, [corpusSize, wordDict]);
 
+
     let onData = (data) => {
         const lines = data.split('\n');
         lines.forEach((element) => {
             const items = element.split(' ');
-            onEvent(parseInt(items[0]), { x: parseFloat(items[1]), y: parseFloat(items[2]) }, true);
+            if (items.length === 3) {
+                onEvent(parseInt(items[0]), { x: parseFloat(items[1]), y: parseFloat(items[2]) }, true);
+            } else {
+                selectCandidate(itmes[0]);
+            }
         });
     };
+
+    let selectCandidate = null;
+    useEffect(() => {
+
+
+    selectCandidate = (cmd) => {
+        console.log('??? in select candidate');
+        console.log(candidates);
+        if (candidates.length === 0) return;
+        bugout.log('select', getTimestamp());
+        switch (cmd) {
+            case 'up':
+            case 'click':
+                setInputText(candidates[0]);
+                return;
+            case 'right':
+                setInputText(candidates[1]);
+                return;
+            case 'down':
+                setInputText(candidates[2]);
+                return;
+            case 'left':
+                setInputText(candidates[3]);
+                return;
+            default:
+                return;
+        }
+    };
+},[candidates]);
 
 
     useEffect(() => {
@@ -266,6 +301,42 @@ const Keyboard = ({ cRef }) => {
         }
     };
 
+    useEffect(() => {
+        window.addEventListener('keydown', (event) => {
+            console.log("in key down|" + event.code+"|");
+            switch (event.code) {
+                case 'ArrowUp':
+                    event.preventDefault();
+                    selectCandidate('up');
+                    return;
+                case 'ArrowRight':
+                    event.preventDefault();
+                    selectCandidate('right');
+                    return;
+                case 'ArrowDown':
+                    event.preventDefault();
+                    selectCandidate('down');
+                    return;
+                case 'ArrowLeft':
+                    event.preventDefault();
+                    selectCandidate('left');
+                    return;
+                case 'Enter':
+                    event.preventDefault();
+                    selectCandidate('click');
+                    return;
+                case 'Space':
+                    event.preventDefault();
+                    let timestamp = getTimestamp();
+                    bugout.log('timestamp', timestamp)
+                    return;
+                default:
+                    return;
+            }
+        });
+    }, []);
+
+
 
     let onEvent = (type, pos, normalized = false) => {
         if (type != START && type != MOVE && type != EXPLORE && type != END) { return; }
@@ -277,6 +348,7 @@ const Keyboard = ({ cRef }) => {
         cursorPos.current = pos;
         switch (type) {
         case START:
+            setCandidates([]);
             bugout.log(timestamp+',start');
             logTime = timestamp;
             userPath.current = [pos];
@@ -293,6 +365,8 @@ const Keyboard = ({ cRef }) => {
             if (isStart.current) {
                 userPath.current.push(pos);
                 calculateCandidate();
+                console.log('in onevent');
+                console.log(candidates);
             }
             bugout.log('interval,' + (timestamp - logTime));
             isStart.current = false;
@@ -442,6 +516,7 @@ const Keyboard = ({ cRef }) => {
         <div>
             <FullScreen handle={fullScreenHandle}>
                 <Card title="Gesture Keyboard" extra={settingsExtra()} style={{ height: '100%' }} bodyStyle={{ height: '100%' }}>
+                    <h3>输入单词:{inputText}</h3>
                     <Row style={{ textAlign: 'center', height: '100%' }} justify="center" align="middle">
                         <Col flex={2} sm={24}>
                           <canvas ref={canvasRef} width={canvasWidth} height={canvasHeight} onMouseDown={e => mouseControl(START, e)} onMouseMove={e => mouseControl(MOVE, e)} onMouseUp={e => mouseControl(END, e)} />
