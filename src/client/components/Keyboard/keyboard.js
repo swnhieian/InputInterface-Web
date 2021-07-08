@@ -5,7 +5,7 @@ import {
     Card, Col, Divider, Drawer, Form, InputNumber, List, notification, Row, Space, Switch,
 } from 'antd';
 import 'antd/dist/antd.css';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useReducer, useRef, useState } from 'react';
 import { FullScreen, useFullScreenHandle } from 'react-full-screen';
 import io from 'socket.io-client';
 import './keyboard.css';
@@ -25,7 +25,7 @@ let logTime = 0;
 const Keyboard = ({ cRef }) => {
     const canvasRef = useRef({ width: 450, height: 450 });
     const sampleSize = 50;
-    const [candidates, setCandidates] = useState([]);
+    // const [candidates, setCandidates] = useState([]);
     const isStart = useRef(false);
     const userPath = useRef([]);
     const cursorPos = useRef(null);
@@ -61,6 +61,8 @@ const Keyboard = ({ cRef }) => {
         loadCorpus();
     }, []);
 
+    
+
     useEffect(() => {
         const socket = io(`${document.domain}:8080`);
         socket.on('connect', () => {
@@ -78,41 +80,12 @@ const Keyboard = ({ cRef }) => {
         lines.forEach((element) => {
             const items = element.split(' ');
             if (items.length === 3) {
-                onEvent(parseInt(items[0]), { x: parseFloat(items[1]), y: parseFloat(items[2]) }, true);
+                dispatch({type: 'event', value: {type: parseInt(items[0]), pos: { x: parseFloat(items[1]), y: parseFloat(items[2]) }, norm: true}});
             } else {
-                selectCandidate(itmes[0]);
+                dispatch({type: 'select', value: items[0]});
             }
         });
     };
-
-    let selectCandidate = null;
-    useEffect(() => {
-
-
-    selectCandidate = (cmd) => {
-        console.log('??? in select candidate');
-        console.log(candidates);
-        if (candidates.length === 0) return;
-        bugout.log('select', getTimestamp());
-        switch (cmd) {
-            case 'up':
-            case 'click':
-                setInputText(candidates[0]);
-                return;
-            case 'right':
-                setInputText(candidates[1]);
-                return;
-            case 'down':
-                setInputText(candidates[2]);
-                return;
-            case 'left':
-                setInputText(candidates[3]);
-                return;
-            default:
-                return;
-        }
-    };
-},[candidates]);
 
 
     useEffect(() => {
@@ -127,7 +100,7 @@ const Keyboard = ({ cRef }) => {
 
     useEffect(() => {
         updateCanvas();
-    }, [userPath]);
+    }, [state]);
 
 
     let init = () => {
@@ -157,31 +130,12 @@ const Keyboard = ({ cRef }) => {
     const mouseControl = (type, e) => {
         if (useMouse) {
             const position = windowToCanvas(canvasRef.current, e.clientX, e.clientY);
-            onEvent(type, position);
+            dispatch({type: 'event', value: {type: type, pos: position}});
+            //onEvent(type, position);
         }
     };
 
-    const mouseDown = (e) => {
-        if (!useMouse) { return; }
-        const position = windowToCanvas(canvasRef.current, e.clientX, e.clientY);
-        onEvent(START, position);
-    };
-
-
-    const mouseMove = (e) => {
-        if (!useMouse) { return; }
-
-        const position = windowToCanvas(canvasRef.current, e.clientX, e.clientY);
-        onEvent(MOVE, position);
-    };
-
-    const mouseUp = (e) => {
-        if (!useMouse) { return; }
-
-        const position = windowToCanvas(canvasRef.current, e.clientX, e.clientY);
-        onEvent(END, position);
-    };
-
+    
     const openNotification = (type, content) => {
         notification[type]({
             message: content,
@@ -277,16 +231,16 @@ const Keyboard = ({ cRef }) => {
         userPath.current = [];
     };
 
-    let updateCanvas = () => {
+    let updateCanvas = (s = state) => {
         const canvas = canvasRef.current;
         const context = canvas.getContext('2d');
-        if (context == null) return;
+        if (context === null) return;
         context.clearRect(0, 0, canvas.width, canvas.height);
         context.beginPath();
         if (layout.current != null) {
             layout.current.render(context);
         }
-        const uPath = userPath.current;
+        let uPath = s.userPath;
         if (uPath.length > 0) {
             context.moveTo(uPath[0].x, uPath[0].y);
             for (let i = 1; i < uPath.length; i++) {
@@ -294,9 +248,9 @@ const Keyboard = ({ cRef }) => {
             }
             context.stroke();
         }
-        if (cursorPos.current != null) {
+        if (s.cursorPos !== null) {
             context.beginPath();
-            context.arc(cursorPos.current.x, cursorPos.current.y, 5, 0, 2 * Math.PI);
+            context.arc(s.cursorPos.x, s.cursorPos.y, 5, 0, 2 * Math.PI);
             context.fill();
         }
     };
@@ -307,23 +261,23 @@ const Keyboard = ({ cRef }) => {
             switch (event.code) {
                 case 'ArrowUp':
                     event.preventDefault();
-                    selectCandidate('up');
+                    dispatch({type: 'select', value: 'up'});
                     return;
                 case 'ArrowRight':
                     event.preventDefault();
-                    selectCandidate('right');
+                    dispatch({type: 'select', value: 'right'});
                     return;
                 case 'ArrowDown':
                     event.preventDefault();
-                    selectCandidate('down');
+                    dispatch({type: 'select', value: 'down'});
                     return;
                 case 'ArrowLeft':
                     event.preventDefault();
-                    selectCandidate('left');
+                    dispatch({type: 'select', value: 'left'});
                     return;
                 case 'Enter':
                     event.preventDefault();
-                    selectCandidate('click');
+                    dispatch({type: 'select', value: 'click'});
                     return;
                 case 'Space':
                     event.preventDefault();
@@ -337,45 +291,6 @@ const Keyboard = ({ cRef }) => {
     }, []);
 
 
-
-    let onEvent = (type, pos, normalized = false) => {
-        if (type != START && type != MOVE && type != EXPLORE && type != END) { return; }
-        if (normalized) {
-            pos.x *= canvasRef.current.width;
-            pos.y *= canvasRef.current.height;
-        }
-        let timestamp = getTimestamp();
-        cursorPos.current = pos;
-        switch (type) {
-        case START:
-            setCandidates([]);
-            bugout.log(timestamp+',start');
-            logTime = timestamp;
-            userPath.current = [pos];
-            isStart.current = true;
-            break;
-        case MOVE:
-        case EXPLORE:
-            if (isStart.current) {
-                userPath.current.push(pos);
-            }
-            break;
-        case END:
-            bugout.log(timestamp+',end');
-            if (isStart.current) {
-                userPath.current.push(pos);
-                calculateCandidate();
-                console.log('in onevent');
-                console.log(candidates);
-            }
-            bugout.log('interval,' + (timestamp - logTime));
-            isStart.current = false;
-            break;
-        default:
-            break;
-        }
-        updateCanvas();
-    };
 
     const similarity = (p1, p2) => {
         if (p1.length != sampleSize || p2.length != sampleSize) {
@@ -460,9 +375,8 @@ const Keyboard = ({ cRef }) => {
         return ret;
     };
 
-
-    let calculateCandidate = () => {
-        const userP = resamplePath(userPath.current);
+    const calculateCandidate = (path) => {
+        const userP = resamplePath(path);
         const ans = [];
         for (let i = 0; i < corpusSize; i++) {
             const ele = wordDict[i];
@@ -484,8 +398,108 @@ const Keyboard = ({ cRef }) => {
         }
         ans.sort((a, b) => b[1] - a[1]);
         // console.log(ans);
-        setCandidates(ans.slice(0, 5));
+        // setCandidates(ans.slice(0, 5));
+        return ans.slice(0, 5);
     };
+
+    const reducer = (state, action) => {
+        if (action.type === 'select') {
+            switch (action.value) {
+                case 'click':
+                case 'up':
+                    return {
+                        ...state,
+                        text: state.candidates.length > 0? state.candidates[0]: ''
+                    };
+                case 'right':
+                    return {
+                        ...state,
+                        text: state.candidates.length > 1? state.candidates[1]: ''
+                    };
+                case 'down':
+                    return {
+                        ...state,
+                        text: state.candidates.length > 2? state.candidates[2]: ''
+                    };
+                case 'left':
+                    return {
+                        ...state,
+                        text: state.candidates.length > 3? state.candidates[3]: ''
+                    };
+                default:
+                    return state;
+            }
+        } else if (action.type === 'event') {
+            let type = action.value.type;
+            let pos = {x:action.value.pos.x, y: action.value.pos.y};
+            let normalized = action.value.norm;
+            if (type != START && type != MOVE && type != EXPLORE && type != END) { return; }
+            if (normalized) {
+                pos.x *= canvasRef.current.width;
+                pos.y *= canvasRef.current.height;
+            }
+            let timestamp = getTimestamp();
+            //cursorPos.current = pos;
+            let newState = state;
+            switch (type) {
+                case START:
+                    bugout.log('start', timestamp);
+                    newState = {
+                        ...state,
+                        cursorPos: pos,
+                        userPath: [pos],
+                        isStart: true,
+                        candidates: [],
+                        logTime: timestamp
+                    };
+                    break;
+                case MOVE:
+                case EXPLORE:
+                    if (state.isStart) {
+                        newState = {
+                            ...state,
+                            cursorPos: pos,
+                            userPath: [...state.userPath, pos]
+                        }
+                    } else {
+                        newState = {
+                            ...state,
+                            cursorPos: pos
+                        }
+                    }
+                    break;
+                case END:
+                    bugout.log('end', timestamp);
+                    if (state.isStart) {
+                        bugout.log('interval,' + (timestamp - state.logTime));
+                        let path = [...state.userPath, pos];
+                        newState = {
+                            ...state,
+                            cursorPos: pos,
+                            candidates: calculateCandidate(path),
+                            userPath: path,
+                            isStart: false
+                        }
+                    } else {
+                        newState = {
+                            ...state,
+                            cursorPos: pos,
+                            isStart: false
+                        }
+                    }
+                    break;
+                default:
+                    return state;
+            }
+            updateCanvas(newState);
+            return newState;
+        }
+        return state;
+    };
+    const [state, dispatch] = useReducer(reducer, {candidates: [], userPath: [], logTime: 0,text: '', isStart: false, cursorPos: null});
+
+
+    
 
     const settingsExtra = () => (
       <Space>
@@ -516,7 +530,7 @@ const Keyboard = ({ cRef }) => {
         <div>
             <FullScreen handle={fullScreenHandle}>
                 <Card title="Gesture Keyboard" extra={settingsExtra()} style={{ height: '100%' }} bodyStyle={{ height: '100%' }}>
-                    <h3>输入单词:{inputText}</h3>
+                    <h3>输入单词:{state.text[0]}</h3>
                     <Row style={{ textAlign: 'center', height: '100%' }} justify="center" align="middle">
                         <Col flex={2} sm={24}>
                           <canvas ref={canvasRef} width={canvasWidth} height={canvasHeight} onMouseDown={e => mouseControl(START, e)} onMouseMove={e => mouseControl(MOVE, e)} onMouseUp={e => mouseControl(END, e)} />
@@ -526,14 +540,14 @@ const Keyboard = ({ cRef }) => {
                             <List
                               header={<div>候选词列表</div>}
                               bordered
-                              dataSource={candidates}
+                              dataSource={state.candidates}
                               renderItem={item => (
                                     <List.Item>
                                         <div>{showScore ? (`${item}`) : item[0]}</div>
                                     </List.Item>
                               )}
                             />
-                            <Selector data={candidates.length>0?[candidates[0][0], candidates[1][0], candidates[2][0], candidates[3][0]]:[]} radius={150}/>
+                            <Selector data={state.candidates.length>0?[state.candidates[0][0], state.candidates[1][0], state.candidates[2][0], state.candidates[3][0]]:[]} radius={150}/>
                         </Col>
                     </Row>
 
