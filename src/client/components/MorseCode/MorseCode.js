@@ -5,20 +5,21 @@ import React, { useEffect, useState, useReducer } from 'react';
 import { FullScreen, useFullScreenHandle } from "react-full-screen";
 import io from 'socket.io-client';
 
-
-
-const MorseCode = (props) => {
-    let diAudio = new Audio('/di.mp3');
-    let daAudio = new Audio('/da.mp3');
-    let spaceAudio = new Audio('/space.mp3');
-    let resetAudio = new Audio('/reset.mp3');
-    let invalidAudio = new Audio('/invalid.mp3');
-    let letterAudios = [];
-    let mappings = {};
-    for (let i = 0; i < 26; i++) {
+let diAudio = new Audio('/di.mp3');
+let daAudio = new Audio('/da.mp3');
+let spaceAudio = new Audio('/space.mp3');
+let resetAudio = new Audio('/reset.mp3');
+let invalidAudio = new Audio('/invalid.mp3');
+let letterAudios = [];
+for (let i = 0; i < 26; i++) {
         let a = new Audio('/ios11_50_' + String.fromCharCode('a'.charCodeAt(0) + i) + '.wav');
         letterAudios.push(a);
     }
+
+const MorseCode = (props) => {
+    
+    let mappings = {};
+    
     const mappingstr = ['A	·-', 'B	-···', 'C	-·-·', 'D	-··', 'E	·', 'F	··-·', 'G	--·', 'H	····', 'I	··', 'J	·---', 'K	-·-', 'L	·-··', 'M	--', 'N	-·', 'O	---', 'P	·--·', 'Q	--·-', 'R	·-·', 'S	···', 'T	-', 'U	··-', 'V	···-', 'W	·--', 'X	-··-', 'Y	-·--', 'Z	--··'];
     for (let i = 0; i < mappingstr.length; i++) {
         let s = mappingstr[i].split('\t');
