@@ -68,29 +68,32 @@ const Grid = (props) => {
         
     }
 
+    console.log("trying to connect to "+ document.domain+':8080');
+    const socket = io(document.domain+':8080');     
     useEffect(() => {
-        console.log("trying to connect to "+ document.domain+':8080');
-        const socket = io(document.domain+':8080');
-        socket.on('connect', () => {
-            console.log(document.domain+':8080'+'connected!!');
-        });
-        socket.on('data', function(data) {
-            let lines = data.split('\n');
-            lines.forEach(element => {
-                let items = element.split(' ');
-                if (items.length > 1) {     
-                    cursorPos.current = {x: parseFloat(items[1])*canvasRef.current.width, y: parseFloat(items[2])*canvasRef.current.height};
-                    updateCanvas();
-                }
-            });
-        });
-        updateCanvas();
-        return function closeSocket() {
-            socket.close();
-        }
+           
     }, []);
 
     useEffect(() => {
+        if (!socket.connected) {
+            socket.on('connect', () => {
+                console.log(document.domain+':8080'+'connected!!');
+            });
+            socket.on('data', function(data) {
+                let lines = data.split('\n');
+                lines.forEach(element => {
+                    let items = element.split(' ');
+                    if (items.length > 1) {     
+                        cursorPos.current = {x: parseFloat(items[1])*canvasRef.current.width, y: parseFloat(items[2])*canvasRef.current.height};
+                        updateCanvas();
+                    }
+                });
+            });
+            updateCanvas();
+            return function closeSocket() {
+                socket.close();
+            }
+        }
         updateCanvas();
     }, [canvasRef, cursorPos, canvasHeight, canvasWidth, row, col, target, hasTarget, targetSize]);
 
@@ -139,13 +142,20 @@ const Grid = (props) => {
         setTarget({x: targetX, y: targetY});
     }
 
+    const switchChange = (v) => {
+        console.log(v);
+        setHasTarget(v);
+        console.log(hasTarget);
+        setRandomTarget();
+    }
+
 
     return (
       <FullScreen handle={fullScreenHandle}>
       <Card title="Cursor Pad" extra={settingsExtra()} style={{height: '100%'}} bodyStyle={{height: '100%'}}>
         <Row>
             <Col span={4}>
-                <Switch checked={hasTarget} checkedChildren="有目标" unCheckedChildren="无目标" onChange={v=>{setHasTarget(v);setRandomTarget()}} />
+                <Switch checked={hasTarget} checkedChildren="有目标" unCheckedChildren="无目标" onClick={v=>switchChange(v)} />
             </Col>
             <Col span={4}>
                 <Button disabled={!hasTarget} onClick={e=>setRandomTarget()}>Set Random Target</Button>
