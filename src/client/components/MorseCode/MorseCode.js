@@ -12,6 +12,7 @@ const MorseCode = (props) => {
     let daAudio = new Audio('/da.mp3');
     let spaceAudio = new Audio('/space.mp3');
     let resetAudio = new Audio('/reset.mp3');
+    let invalidAudio = new Audio('/invalid.mp3');
     let letterAudios = [];
     let mappings = {};
     for (let i = 0; i < 26; i++) {
@@ -76,8 +77,13 @@ const MorseCode = (props) => {
                         code: ''
                     };
                 }
-                let letter = mappings[state.code]
-                playChar(letter);
+                let letter = mappings[state.code];
+                if (letter === undefined) {
+                    letter = '';
+                    invalidAudio.play();
+                } else {
+                    playChar(letter);
+                }
                 return {
                     input: state.input + letter,
                     code: ''
