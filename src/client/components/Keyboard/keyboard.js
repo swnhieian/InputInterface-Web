@@ -2,7 +2,7 @@ import {
     ClearOutlined, FullscreenExitOutlined, FullscreenOutlined, SettingOutlined,
 } from '@ant-design/icons';
 import {
-    Card, Col, Divider, Drawer, Form, InputNumber, List, notification, Row, Space, Switch,
+    Card, Button, Col, Divider, Drawer, Form, InputNumber, List, notification, Row, Space, Switch,
 } from 'antd';
 import 'antd/dist/antd.css';
 import React, { useEffect, useReducer, useRef, useState } from 'react';
@@ -13,7 +13,7 @@ import Layout from './layout';
 import { Debugout } from 'debugout.js';
 import Selector from '../ChineseIME/Selector';
 
-const bugout = new Debugout({ useTimestamps: true, realTimeLoggingOn:true });
+const bugout = new Debugout({ useTimestamps: true});//, realTimeLoggingOn:true });
 const START = 1;
 const MOVE = 2;
 const END = 3;
@@ -404,6 +404,8 @@ const Keyboard = ({ cRef }) => {
 
     const reducer = (state, action) => {
         if (action.type === 'select') {
+            if (action.value.length == 0) return state;
+            bugout.log(action.value, new Date().getTime());
             switch (action.value) {
                 case 'click':
                 case 'up':
@@ -449,7 +451,7 @@ const Keyboard = ({ cRef }) => {
                         cursorPos: pos,
                         userPath: [pos],
                         isStart: true,
-                        candidates: [],
+                        //candidates: [],
                         logTime: timestamp
                     };
                     break;
@@ -530,6 +532,7 @@ const Keyboard = ({ cRef }) => {
         <div>
             <FullScreen handle={fullScreenHandle}>
                 <Card title="Gesture Keyboard" extra={settingsExtra()} style={{ height: '100%' }} bodyStyle={{ height: '100%' }}>
+                <Button onClick={e=>{bugout.downloadLog()}}>Download Log</Button>
                     <h3>输入单词:{state.text[0]}</h3>
                     <Row style={{ textAlign: 'center', height: '100%' }} justify="center" align="middle">
                         <Col flex={2} sm={24}>
@@ -625,13 +628,13 @@ const Keyboard = ({ cRef }) => {
                 </Card>
             </FullScreen>
 
-            <Card title="Log" style={{ height: '100%' }} bodyStyle={{ height: '100%' }}>
+            {/* <Card title="Log" style={{ height: '100%' }} bodyStyle={{ height: '100%' }}>
                     <Row style={{ textAlign: 'center', height: '100%' }} justify="center" align="middle">
                         <pre>
                             {bugout.getLog()}
                         </pre>
                     </Row>
-                </Card>
+                </Card> */}
         </div>
     );
 };

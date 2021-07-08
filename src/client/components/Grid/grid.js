@@ -260,10 +260,10 @@ const Grid = (props) => {
                 </Form>
             </Drawer>
       </Card>   
-      <Card title="Cursor Pad" style={{height: '100%'}} bodyStyle={{height: '100%'}}>
+      {/* <Card title="Cursor Pad" style={{height: '100%'}} bodyStyle={{height: '100%'}}>
       <Button onClick={e=>{bugout.clear();setLogoutput(bugout.getLog());}}>Clear Log</Button>
           <pre>{logOutput}</pre>
-      </Card>
+      </Card> */}
       </FullScreen> 
     );
 }
