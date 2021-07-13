@@ -7,7 +7,8 @@ import io from 'socket.io-client';
 import pinyinIME from './../ChineseIME/pinyinIME';
 import Selector from './../ChineseIME/Selector';
 
-
+const cmdStart = 1;
+const cmdEnd = 51;
 
 const Command = (props) => {
 
@@ -43,7 +44,7 @@ const Command = (props) => {
         return ret;
     }
     const reducer = (state, action) => {
-        const data = {start: 1, end:50};
+        const data = {start: cmdStart, end:cmdEnd};
         // const data = ['命令1-10', '命令11-20', '命令21-30', '命令31-40', '命令41-50'];
         let op = actionToIndex(action);
         let cmd = state.message[op];
@@ -78,7 +79,7 @@ const Command = (props) => {
         }  
     }
 
-    const [state, dispatch] = useReducer(reducer, {level: 1, message: getCmdMsg(1, 50, 5, ''), prefix: [{start:1, end:50}], input: '无'});
+    const [state, dispatch] = useReducer(reducer, {level: 1, message: getCmdMsg(cmdStart,cmdEnd, 5, ''), prefix: [{start:cmdStart, end:cmdEnd}], input: '无'});
 
 
 

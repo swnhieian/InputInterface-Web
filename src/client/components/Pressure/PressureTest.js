@@ -42,9 +42,9 @@ const PressureTest = (props) => {
     }, []);
 
     const reducer = (state, action) => {
-        console.log('in reducer');
-        console.log(state);
-        console.log(action);
+        // console.log('in reducer');
+        // console.log(state);
+        // console.log(action);
         let timeStamp = new Date().getTime();
         switch (action.type) {
             case 'pressure':
@@ -75,6 +75,7 @@ const PressureTest = (props) => {
                         }
                     }
                 } else { // not in maxforce test
+                    console.log(action.value);
                     return {
                         ...state,
                         value: action.value

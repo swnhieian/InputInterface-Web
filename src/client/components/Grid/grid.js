@@ -28,18 +28,28 @@ const Grid = (props) => {
     const [logOutput, setLogoutput] = useState('');
 
 
+
     
 
     const reducer = (state, action) => {
+        let xindex = Math.floor(action.x / canvasRef.current.width * col);
+        let yindex = Math.floor(action.y / canvasRef.current.height * row);
+        if (xindex >= col) xindex = col - 1;
+        if (yindex >= row) yindex = row -1;
+        console.log(xindex, yindex);
         return {
             ...state,
-            cursorPos: action
+            cursorPos: {x: xindex, y: yindex}
         }
     };
-
     const [state, dispatch] = useReducer(reducer, {cursorPos: {x: -1, y: -1}});
 
-    let updateCanvas = () => {
+
+    const updateCanvas = (pos) => {
+        //console.log('update canvas:', state.cursorPos.x, state.cursorPos.y);
+        if (pos === undefined) {
+            pos = state.cursorPos;
+        }
         let canvas = canvasRef.current;
         let context = canvas.getContext('2d');
         context.clearRect(0, 0, canvas.width, canvas.height);
@@ -71,16 +81,15 @@ const Grid = (props) => {
         }
         
         if (state.cursorPos != null) {
-            let pos = state.cursorPos;
-            let xindex = Math.floor(pos.x / canvas.width * col);
-            let yindex = Math.floor(pos.y / canvas.height * row);
+            let xindex = pos.x;
+            let yindex = pos.y;
             if (hasTarget && Math.abs(xindex - targetX) < targetSize && Math.abs(yindex - targetY) < targetSize) {
                 context.fillStyle = '#52c41a'
                 let timeStamp = new Date().getTime();
                 if (!reached) {
                     bugout.log('reach', timeStamp);
                     bugout.log('time', timeStamp - lastTime);
-                    setLogoutput(bugout.getLog());
+                    //setLogoutput(bugout.getLog());
                     setReached(true);
                 }
             } else {
@@ -90,6 +99,7 @@ const Grid = (props) => {
         }
         
     }
+    
 
     // let socket;
     useEffect(() => {
@@ -109,10 +119,25 @@ const Grid = (props) => {
                 }
             });
         });
+        
+        window.addEventListener('keydown', (event) => {
+            console.log("in key down|" + event.code+"|");
+            switch (event.code) {
+                case 'Space':
+                    event.preventDefault();
+                    let timeStamp = new Date().getTime();
+                    bugout.log('timeStamp', timeStamp);
+                    //setLogoutput(bugout.getLog());
+                    return;
+                default:
+                    return;
+            }
+        });
         updateCanvas();
         return function closeSocket() {
             socket.close();
         }
+
         
     }, []);
 
@@ -168,7 +193,7 @@ const Grid = (props) => {
         setTarget({x: targetX, y: targetY});
         let timeStamp = new Date().getTime();
         bugout.log('setTarget', timeStamp);
-        setLogoutput(bugout.getLog());
+        //setLogoutput(bugout.getLog());
         setLasttime(timeStamp);
         setReached(false);
     }
@@ -177,22 +202,6 @@ const Grid = (props) => {
         setHasTarget(v);
         setRandomTarget();
     }
-
-    useEffect(() => {
-        window.addEventListener('keydown', (event) => {
-            console.log("in key down|" + event.code+"|");
-            switch (event.code) {
-                case 'Space':
-                    event.preventDefault();
-                    let timeStamp = new Date().getTime();
-                    bugout.log('timeStamp', timeStamp);
-                    setLogoutput(bugout.getLog());
-                    return;
-                default:
-                    return;
-            }
-        });
-    }, []);
 
 
 

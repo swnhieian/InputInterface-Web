@@ -156,8 +156,9 @@ const Keyboard = ({ cRef }) => {
                     tempDict.push([word, freq]);
                 }
                 setWordDict(tempDict);
+                setCorpusSize(tempDict.length);
                 // wordDict.current = tempDict;
-                openNotification('success', '词库加载成功');
+                openNotification('success', '词库加载成功,共有'+tempDict.length+'个词');
             })
             .catch((err) => {
                 openNotification('error', `词库加载失败${err}`);
