@@ -2,7 +2,7 @@ import { createFromIconfontCN, HomeOutlined, RocketOutlined, MacCommandOutlined 
 import { Layout, Menu } from 'antd';
 import React, { useEffect, useState } from 'react';
 import {
-  BrowserRouter as Router, Link, Route, Switch
+    BrowserRouter as Router, Link, Route, Switch
 } from 'react-router-dom';
 import { useLocation } from 'react-router-dom/cjs/react-router-dom.min';
 import './app.css';
@@ -34,70 +34,66 @@ const Pagelayout = () => {
             .then(data => setIp(data.ip));
     }, []);
     return (
-      <Layout style={{ minHeight: '100vh' }}>
-          <Sider
-              theme="light" collapsible collapsed={collapsed} onCollapse={(state, type) => setCollapsed(state)}
-              style={{ background: 'white' }}
+        <Layout style={{ minHeight: '100vh' }}>
+            <Sider
+                theme="light" collapsible collapsed={collapsed} onCollapse={(state, type) => setCollapsed(state)}
+                style={{ background: 'white' }}
             >
-              <div className="logo" style={{ height: '32px', margin: '16px', background: 'white' }}>
-                  <img src={logo} style={{ width: '100%' }} />
+                <div className="logo" style={{ height: '32px', margin: '16px', background: 'white' }}>
+                    <img src={logo} style={{ width: '100%' }} />
                 </div>
-              <Menu defaultSelectedKeys={[useLocation().pathname]} mode="inline">
-                  <Menu.Item key="/" icon={<HomeOutlined />}>
-                      <Link to="/">Home</Link>
+                <Menu defaultSelectedKeys={[useLocation().pathname]} mode="inline">
+                    <Menu.Item key="/" icon={<HomeOutlined />}>
+                        <Link to="/">Home</Link>
                     </Menu.Item>
-                  <Menu.Item key="/keyboard" icon={<IconFont type="iconkeyboard" />}>
-                      <Link to="/keyboard">Keyboard</Link>
+                    <Menu.Item key="/keyboard" icon={<IconFont type="iconkeyboard" />}>
+                        <Link to="/keyboard">Keyboard</Link>
                     </Menu.Item>
-                  <Menu.Item key="/grid" icon={<IconFont type="iconcursor" />}>
-                      <Link to="/grid">Grid</Link>
+                    <Menu.Item key="/grid" icon={<IconFont type="iconcursor" />}>
+                        <Link to="/grid">Grid</Link>
                     </Menu.Item>
-                  <Menu.Item key="/morse" icon={<IconFont type="iconmorse-code" />}>
-                    <Link to="/morse">Morse Code</Link>
-                  </Menu.Item>
-                  <Menu.Item key="/pressure" icon={<IconFont type="iconpressure" />}>
-                    <Link to="/pressure">Pressure Test</Link>
-                  </Menu.Item>
-                  <Menu.Item key="/gloves" icon={<RocketOutlined />}>
-                      <Link to="/gloves">Gloves</Link>
+                    <Menu.Item key="/morse" icon={<IconFont type="iconmorse-code" />}>
+                        <Link to="/morse">Morse Code</Link>
+                    </Menu.Item>
+                    <Menu.Item key="/pressure" icon={<IconFont type="iconpressure" />}>
+                        <Link to="/pressure">Pressure Test</Link>
+                    </Menu.Item>
+                    <Menu.Item key="/gloves" icon={<RocketOutlined />}>
+                        <Link to="/gloves">Gloves</Link>
                     </Menu.Item>
                     <Menu.Item key="/chinese" icon={<IconFont type="iconfuhao-zhongwen" />}>
-                      <Link to="/chinese">Chinese</Link>
+                        <Link to="/chinese">Chinese</Link>
                     </Menu.Item>
                     <Menu.Item key="/command" icon={<MacCommandOutlined />}>
-                      <Link to="/command">Command</Link>
+                        <Link to="/command">Command</Link>
                     </Menu.Item>
-                    
-
                     <Menu.Item key="/ninekeys" icon={<IconFont type="iconkeyboard" />}>
-                      <Link to="/ninekeys">Ninekeys</Link>
+                        <Link to="/ninekeys">Ninekeys</Link>
                     </Menu.Item>
                 </Menu>
             </Sider>
-          <Layout className="site-layout">
-              <Header theme="light" className="site-layout-background" style={{ padding: 0, background: '#fff' }} />
-              <Content style={{ margin: '0 16px' }}>
-                  <div className="site-layout-background" style={{ padding: 24, minHeight: 360 }}>
-                      <Switch>
-                          <Route path="/keyboard"><Keyboard /></Route>
-                          <Route path="/grid"><Grid /></Route>
-                          <Route path="/gloves"><Gloves /></Route>
-                          <Route path="/morse"><MorseCode /></Route>
-                          <Route path="/pressure"><PressureTest /></Route>
-                          <Route path="/chinese"><ChineseIME /></Route>
-                          <Route path="/command"><Command /></Route>
-
-
-                          <Route path="/ninekeys"><Ninekeys /></Route>
-                          <Route path="/">
-                              Socket 发送数据地址：
-{ip}
-                              :8081
-</Route>
+            <Layout className="site-layout">
+                <Header theme="light" className="site-layout-background" style={{ padding: 0, background: '#fff' }} />
+                <Content style={{ margin: '0 16px' }}>
+                    <div className="site-layout-background" style={{ padding: 24, minHeight: 360 }}>
+                        <Switch>
+                            <Route path="/keyboard"><Keyboard /></Route>
+                            <Route path="/grid"><Grid /></Route>
+                            <Route path="/gloves"><Gloves /></Route>
+                            <Route path="/morse"><MorseCode /></Route>
+                            <Route path="/pressure"><PressureTest /></Route>
+                            <Route path="/chinese"><ChineseIME /></Route>
+                            <Route path="/command"><Command /></Route>
+                            <Route path="/ninekeys"><Ninekeys /></Route>
+                            <Route path="/">
+                                Socket 发送数据地址：
+                                {ip}
+                                :8081
+                            </Route>
                         </Switch>
                     </div>
                 </Content>
-              <Footer style={{ textAlign: 'center' }}>Weinan Shi ©2021</Footer>
+                <Footer style={{ textAlign: 'center' }}>Weinan Shi ©2021</Footer>
             </Layout>
         </Layout>
     );
@@ -105,8 +101,8 @@ const Pagelayout = () => {
 
 const App = () => (
     <Router>
-    <Pagelayout />
-  </Router>
+        <Pagelayout />
+    </Router>
 );
 export default App;
 // export default class App extends Component {
