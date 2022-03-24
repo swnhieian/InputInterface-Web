@@ -13,7 +13,7 @@ import Layout from './layout';
 import { Debugout } from 'debugout.js';
 import Selector from '../ChineseIME/Selector';
 
-const bugout = new Debugout({ useTimestamps: true});//, realTimeLoggingOn:true });
+const bugout = new Debugout({ useTimestamps: true });//, realTimeLoggingOn:true });
 const START = 1;
 const MOVE = 2;
 const END = 3;
@@ -48,6 +48,18 @@ const Keyboard = ({ cRef }) => {
     const [canvasHeight, setCanvasHeight] = useState(450);
     const fullScreenHandle = useFullScreenHandle();
     const [inputText, setInputText] = useState('');
+    const [q_pos, setQPos] = useState({ x: 0.5 * (0.9 - 0.1) / 10 + 0.1, y: 0.85 })
+    const [p_pos, setPPos] = useState({ x: -0.5 * (0.9 - 0.1) / 10 + 0.9, y: 0.85 })
+    const [a_pos, setAPos] = useState({ x: 0.5 * (0.8 - 0.2) / 9 + 0.2, y: 0.5 })
+    const [l_pos, setLPos] = useState({ x: -0.5 * (0.8 - 0.2) / 9 + 0.8, y: 0.5 })
+    const [z_pos, setZPos] = useState({ x: 0.5 * (0.75 - 0.25) / 9 + 0.25, y: 0.15 })
+    const [m_pos, setMPos] = useState({ x: -0.5 * (0.75 - 0.25) / 9 + 0.75, y: 0.15 })
+    // const [q_pos, setQPos] = useState({ x: 22.5, y: 262.5 })
+    // const [p_pos, setPPos] = useState({ x: 427.5, y: 262.5 })
+    // const [a_pos, setAPos] = useState({ x: 45, y: 337.5 })
+    // const [l_pos, setLPos] = useState({ x: 405, y: 337.5 })
+    // const [z_pos, setZPos] = useState({ x: 90, y: 412.5 })
+    // const [m_pos, setMPos] = useState({ x: 360, y: 412.5 })
 
 
     const layout = useRef(null);
@@ -61,7 +73,7 @@ const Keyboard = ({ cRef }) => {
         loadCorpus();
     }, []);
 
-    
+
 
     useEffect(() => {
         const socket = io(`${document.domain}:8080`);
@@ -77,22 +89,31 @@ const Keyboard = ({ cRef }) => {
 
     let onData = (data) => {
         const lines = data.split('\n');
+        console.log(lines);
         lines.forEach((element) => {
             const items = element.split(' ');
             switch (items[0]) {
                 case 'event':
-                    dispatch({type: 'event', value: {type: parseInt(items[0]), pos: { x: parseFloat(items[1]), y: parseFloat(items[2]) }, norm: true}});
+                    dispatch({ type: 'event', value: { type: parseInt(items[1]), pos: { x: parseFloat(items[2]), y: parseFloat(items[3]) }, norm: true } });
                     break;
                 case 'select':
-                    dispatch({type: 'select', value: items[0]});
-                case 'init_kb':
-                    dispatch({type: 'init_kb', value: {}})
+                    dispatch({ type: 'select', value: items[1] });
+                    break;
+                case 'reshape':
+                    dispatch({
+                        type: 'reshape',
+                        value: {
+                            q_pos: {x: parseFloat(items[1]), y: parseFloat(items[2])},
+                            p_pos: {x: parseFloat(items[3]), y: parseFloat(items[4])},
+                            a_pos: {x: parseFloat(items[5]), y: parseFloat(items[6])},
+                            l_pos: {x: parseFloat(items[7]), y: parseFloat(items[8])},
+                            z_pos: {x: parseFloat(items[9]), y: parseFloat(items[10])},
+                            m_pos: {x: parseFloat(items[11]), y: parseFloat(items[12])},
+                        }
+                    })
+                    break;
                 default:
                     break;
-            }
-            if (items.length === 3) {
-            } else {
-                
             }
         });
     };
@@ -100,13 +121,19 @@ const Keyboard = ({ cRef }) => {
 
     useEffect(() => {
         layout.current = new Layout({
-            width: keyboardWidth,
-            height: keyboardHeight,
+            q_pos: q_pos,
+            p_pos: p_pos,
+            a_pos: a_pos,
+            l_pos: l_pos,
+            z_pos: z_pos,
+            m_pos: m_pos,
             posx: keyboardPosX,
             posy: keyboardPosY,
+            keyboardHeight: keyboardHeight,
+            keyboardWidth: keyboardWidth,
         });
         updateCanvas();
-    }, [keyboardHeight, keyboardWidth, keyboardPosX, keyboardPosY]);
+    }, [keyboardHeight, keyboardWidth, keyboardPosX, keyboardPosY, q_pos, p_pos, a_pos, l_pos, z_pos, m_pos]);
 
     useEffect(() => {
         updateCanvas();
@@ -121,10 +148,16 @@ const Keyboard = ({ cRef }) => {
         setKeyboardPosX(0);
         setKeyboardPosY(canvas.height / 2);
         layout.current = new Layout({
-            width: keyboardWidth,
-            height: keyboardHeight,
+            q_pos: q_pos,
+            p_pos: p_pos,
+            a_pos: a_pos,
+            l_pos: l_pos,
+            z_pos: z_pos,
+            m_pos: m_pos,
             posx: keyboardPosX,
             posy: keyboardPosY,
+            keyboardHeight: keyboardHeight,
+            keyboardWidth: keyboardWidth,
         });
         updateCanvas();
     };
@@ -140,12 +173,12 @@ const Keyboard = ({ cRef }) => {
     const mouseControl = (type, e) => {
         if (useMouse) {
             const position = windowToCanvas(canvasRef.current, e.clientX, e.clientY);
-            dispatch({type: 'event', value: {type: type, pos: position}});
+            dispatch({ type: 'event', value: { type: type, pos: position } });
             //onEvent(type, position);
         }
     };
 
-    
+
     const openNotification = (type, content) => {
         notification[type]({
             message: content,
@@ -168,7 +201,7 @@ const Keyboard = ({ cRef }) => {
                 setWordDict(tempDict);
                 setCorpusSize(tempDict.length);
                 // wordDict.current = tempDict;
-                openNotification('success', '词库加载成功,共有'+tempDict.length+'个词');
+                openNotification('success', '词库加载成功,共有' + tempDict.length + '个词');
             })
             .catch((err) => {
                 openNotification('error', `词库加载失败${err}`);
@@ -268,27 +301,27 @@ const Keyboard = ({ cRef }) => {
 
     useEffect(() => {
         window.addEventListener('keydown', (event) => {
-            console.log("in key down|" + event.code+"|");
+            console.log("in key down|" + event.code + "|");
             switch (event.code) {
                 case 'ArrowUp':
                     event.preventDefault();
-                    dispatch({type: 'select', value: 'up'});
+                    dispatch({ type: 'select', value: 'up' });
                     return;
                 case 'ArrowRight':
                     event.preventDefault();
-                    dispatch({type: 'select', value: 'right'});
+                    dispatch({ type: 'select', value: 'right' });
                     return;
                 case 'ArrowDown':
                     event.preventDefault();
-                    dispatch({type: 'select', value: 'down'});
+                    dispatch({ type: 'select', value: 'down' });
                     return;
                 case 'ArrowLeft':
                     event.preventDefault();
-                    dispatch({type: 'select', value: 'left'});
+                    dispatch({ type: 'select', value: 'left' });
                     return;
                 case 'Enter':
                     event.preventDefault();
-                    dispatch({type: 'select', value: 'click'});
+                    dispatch({ type: 'select', value: 'click' });
                     return;
                 case 'Space':
                     event.preventDefault();
@@ -422,35 +455,40 @@ const Keyboard = ({ cRef }) => {
                 case 'up':
                     return {
                         ...state,
-                        text: state.candidates.length > 0? state.candidates[0]: ''
+                        text: state.candidates.length > 0 ? state.candidates[0] : ''
                     };
                 case 'right':
                     return {
                         ...state,
-                        text: state.candidates.length > 1? state.candidates[1]: ''
+                        text: state.candidates.length > 1 ? state.candidates[1] : ''
                     };
                 case 'down':
                     return {
                         ...state,
-                        text: state.candidates.length > 2? state.candidates[2]: ''
+                        text: state.candidates.length > 2 ? state.candidates[2] : ''
                     };
                 case 'left':
                     return {
                         ...state,
-                        text: state.candidates.length > 3? state.candidates[3]: ''
+                        text: state.candidates.length > 3 ? state.candidates[3] : ''
                     };
                 default:
                     return state;
             }
         } else if (action.type === 'event') {
             let type = action.value.type;
-            let pos = {x:action.value.pos.x, y: action.value.pos.y};
+            let pos = { x: action.value.pos.x, y: action.value.pos.y };
             let normalized = action.value.norm;
             if (type != START && type != MOVE && type != EXPLORE && type != END) { return; }
             if (normalized) {
-                pos.x *= canvasRef.current.width;
-                pos.y *= canvasRef.current.height;
+                // pos.x *= canvasRef.current.width;
+                // pos.y *= canvasRef.current.height;
+                pos.y = 1 - pos.y;
+                pos.x *= keyboardWidth;
+                pos.y *= keyboardHeight;
+                pos.y += canvasRef.current.height - keyboardHeight;
             }
+            console.log(pos)
             let timestamp = getTimestamp();
             //cursorPos.current = pos;
             let newState = state;
@@ -491,7 +529,7 @@ const Keyboard = ({ cRef }) => {
                             ...state,
                             cursorPos: pos,
                             candidates: cands,
-                            text: cands.length > 0?cands[0]:'',
+                            text: cands.length > 0 ? cands[0] : '',
                             userPath: path,
                             isStart: false
                         }
@@ -508,19 +546,26 @@ const Keyboard = ({ cRef }) => {
             }
             updateCanvas(newState);
             return newState;
+        } else if (action.type === 'reshape') {
+            setQPos(action.value.q_pos);
+            setPPos(action.value.p_pos);
+            setAPos(action.value.a_pos);
+            setLPos(action.value.l_pos);
+            setZPos(action.value.z_pos);
+            setMPos(action.value.m_pos);
         }
         return state;
     };
-    const [state, dispatch] = useReducer(reducer, {candidates: [], userPath: [], logTime: 0,text: '', isStart: false, cursorPos: null});
+    const [state, dispatch] = useReducer(reducer, { candidates: [], userPath: [], logTime: 0, text: '', isStart: false, cursorPos: null });
 
 
-    
+
 
     const settingsExtra = () => (
-      <Space>
-          <SettingOutlined onClick={event => setShowSettings(true)} />
-          <ClearOutlined onClick={event => clearCanvas()} />
-          {fullScreenHandle.active
+        <Space>
+            <SettingOutlined onClick={event => setShowSettings(true)} />
+            <ClearOutlined onClick={event => clearCanvas()} />
+            {fullScreenHandle.active
                 ? <FullscreenExitOutlined onClick={fullScreenHandle.exit} />
                 : <FullscreenOutlined onClick={fullScreenHandle.enter} />
             }
@@ -545,93 +590,93 @@ const Keyboard = ({ cRef }) => {
         <div>
             <FullScreen handle={fullScreenHandle}>
                 <Card title="Gesture Keyboard" extra={settingsExtra()} style={{ height: '100%' }} bodyStyle={{ height: '100%' }}>
-                <Button onClick={e=>{bugout.downloadLog()}}>Download Log</Button>
+                    <Button onClick={e => { bugout.downloadLog() }}>Download Log</Button>
                     <h3>输入单词:{state.text[0]}</h3>
                     <Row style={{ textAlign: 'center', height: '100%' }} justify="center" align="middle">
                         <Col flex={2} sm={24}>
-                          <canvas ref={canvasRef} width={canvasWidth} height={canvasHeight} onMouseDown={e => mouseControl(START, e)} onMouseMove={e => mouseControl(MOVE, e)} onMouseUp={e => mouseControl(END, e)} />
-                          {/* <canvas ref={canvasRef} width="450" height="450"/> */}
+                            <canvas ref={canvasRef} width={canvasWidth} height={canvasHeight} onMouseDown={e => mouseControl(START, e)} onMouseMove={e => mouseControl(MOVE, e)} onMouseUp={e => mouseControl(END, e)} />
+                            {/* <canvas ref={canvasRef} width="450" height="450"/> */}
                         </Col>
                         <Col flex={1}>
                             <List
-                              header={<div>候选词列表</div>}
-                              bordered
-                              dataSource={state.candidates}
-                              renderItem={item => (
+                                header={<div>候选词列表</div>}
+                                bordered
+                                dataSource={state.candidates}
+                                renderItem={item => (
                                     <List.Item>
                                         <div>{showScore ? (`${item}`) : item[0]}</div>
                                     </List.Item>
-                              )}
+                                )}
                             />
-                            <Selector data={state.candidates.length>0?[state.candidates[0][0], state.candidates[1][0], state.candidates[2][0], state.candidates[3][0]]:[]} radius={150}/>
+                            <Selector data={state.candidates.length > 0 ? [state.candidates[0][0], state.candidates[1][0], state.candidates[2][0], state.candidates[3][0]] : []} radius={150} />
                         </Col>
                     </Row>
 
-                  <Drawer
-                      visible={showSettings}
-                      onClose={settingsClosed}
-                      width={720}
-                      title="键盘设置"
+                    <Drawer
+                        visible={showSettings}
+                        onClose={settingsClosed}
+                        width={720}
+                        title="键盘设置"
                     >
-                      <Form.Item layout="horizontal" {...formLayout}>
-                          <Form.Item label="词库大小(1000-30000)">
-                              <InputNumber style={{ width: '100%' }} min={1000} max={30000} step={1000} onChange={v => setCorpusSize(v)} value={corpusSize} />
+                        <Form.Item layout="horizontal" {...formLayout}>
+                            <Form.Item label="词库大小(1000-30000)">
+                                <InputNumber style={{ width: '100%' }} min={1000} max={30000} step={1000} onChange={v => setCorpusSize(v)} value={corpusSize} />
                             </Form.Item>
-                          <Form.Item label="绑定鼠标事件">
-                              <Switch checked={useMouse} onChange={v => setUseMouse(v)} />
+                            <Form.Item label="绑定鼠标事件">
+                                <Switch checked={useMouse} onChange={v => setUseMouse(v)} />
                             </Form.Item>
-                          <Form.Item label="使用相对位置信息">
-                              <Switch checked={useRelativeModel} onChange={v => setUseRelativeModel(v)} />
+                            <Form.Item label="使用相对位置信息">
+                                <Switch checked={useRelativeModel} onChange={v => setUseRelativeModel(v)} />
                             </Form.Item>
-                          <Form.Item label="使用语言模型">
-                              <Switch checked={useLanguageModel} onChange={v => setUseLanguageModel(v)} />
+                            <Form.Item label="使用语言模型">
+                                <Switch checked={useLanguageModel} onChange={v => setUseLanguageModel(v)} />
                             </Form.Item>
-                          <Form.Item label="显示匹配结果">
-                              <Switch checked={showScore} onChange={v => setShowScore(v)} />
+                            <Form.Item label="显示匹配结果">
+                                <Switch checked={showScore} onChange={v => setShowScore(v)} />
                             </Form.Item>
-                          <Divider>键盘参数</Divider>
-                          <Form.Item label="输入区域大小">
-                              <Row gutter={16}>
-                                  <Col flex={1}>
-                                      <Form.Item label="宽(0-1000)" layout="horizontal">
-                                          <InputNumber min={0} max={1000} onChange={v => setCanvasWidth(v)} value={canvasWidth} />
+                            <Divider>键盘参数</Divider>
+                            <Form.Item label="输入区域大小">
+                                <Row gutter={16}>
+                                    <Col flex={1}>
+                                        <Form.Item label="宽(0-1000)" layout="horizontal">
+                                            <InputNumber min={0} max={1000} onChange={v => setCanvasWidth(v)} value={canvasWidth} />
                                         </Form.Item>
                                     </Col>
 
-                                  <Col flex={1}>
-                                      <Form.Item label="高(0-1000)" layout="horizontal">
-                                          <InputNumber min={0} max={1000} onChange={v => setCanvasHeight(v)} value={canvasHeight} />
+                                    <Col flex={1}>
+                                        <Form.Item label="高(0-1000)" layout="horizontal">
+                                            <InputNumber min={0} max={1000} onChange={v => setCanvasHeight(v)} value={canvasHeight} />
                                         </Form.Item>
                                     </Col>
                                 </Row>
                             </Form.Item>
 
-                          <Form.Item label="键盘大小">
-                              <Row gutter={16}>
-                                  <Col flex={1}>
-                                      <Form.Item label="宽" layout="horizontal">
-                                          <InputNumber style={{ width: '100%' }} min={0} max={canvasRef.current.width} onChange={v => setKeyboardWidth(v)} value={keyboardWidth} />
+                            <Form.Item label="键盘大小">
+                                <Row gutter={16}>
+                                    <Col flex={1}>
+                                        <Form.Item label="宽" layout="horizontal">
+                                            <InputNumber style={{ width: '100%' }} min={0} max={canvasRef.current.width} onChange={v => setKeyboardWidth(v)} value={keyboardWidth} />
                                         </Form.Item>
                                     </Col>
 
-                                  <Col flex={1}>
-                                      <Form.Item label="高" layout="horizontal">
-                                          <InputNumber style={{ width: '100%' }} min={0} max={canvasRef.current.height} onChange={v => setKeyboardHeight(v)} value={keyboardHeight} />
+                                    <Col flex={1}>
+                                        <Form.Item label="高" layout="horizontal">
+                                            <InputNumber style={{ width: '100%' }} min={0} max={canvasRef.current.height} onChange={v => setKeyboardHeight(v)} value={keyboardHeight} />
                                         </Form.Item>
                                     </Col>
                                 </Row>
                             </Form.Item>
-                          <Form.Item label="键盘位置（左上角）">
-                              <Row gutter={16}>
-                                  <Col flex={1}>
-                                      <Form.Item label="X" layout="horizontal">
-                                          <InputNumber style={{ width: '100%' }} min={0} max={canvasRef.current.width - keyboardWidth} onChange={v => setKeyboardPosX(v)} value={keyboardPosX} />
+                            <Form.Item label="键盘位置（左上角）">
+                                <Row gutter={16}>
+                                    <Col flex={1}>
+                                        <Form.Item label="X" layout="horizontal">
+                                            <InputNumber style={{ width: '100%' }} min={0} max={canvasRef.current.width - keyboardWidth} onChange={v => setKeyboardPosX(v)} value={keyboardPosX} />
                                         </Form.Item>
                                     </Col>
 
-                                  <Col flex={1}>
-                                      <Form.Item label="Y" layout="horizontal">
-                                          <InputNumber style={{ width: '100%' }} min={0} max={canvasRef.current.height - keyboardHeight} onChange={v => setKeyboardPosY(v)} value={keyboardPosY} />
+                                    <Col flex={1}>
+                                        <Form.Item label="Y" layout="horizontal">
+                                            <InputNumber style={{ width: '100%' }} min={0} max={canvasRef.current.height - keyboardHeight} onChange={v => setKeyboardPosY(v)} value={keyboardPosY} />
                                         </Form.Item>
                                     </Col>
                                 </Row>

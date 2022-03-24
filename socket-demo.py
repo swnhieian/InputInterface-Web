@@ -1,12 +1,12 @@
+from socket import socket, AF_INET, SOCK_STREAM, timeout
 import argparse
-import time, sys
+import time
+import sys
 
 
 IP = "localhost"
 PORT = 8081
 
-
-from socket import socket, AF_INET, SOCK_STREAM, timeout
 
 class CursorClient:
     def __init__(self, server_addr, port, timeout=1):
@@ -25,22 +25,36 @@ class CursorClient:
         self.my_socket.close()
         print("remote client socket closed")
 
-    def send(self, touch_state, x, y):
+    def sendToKB(self, touch_state, x, y):
         paras = [touch_state, x, y]
-        self.my_socket.send(str(" ".join([str(item) for item in paras]) + "\n").encode())
-    
+        self.my_socket.send(
+            str(" ".join([str(item) for item in paras]) + "\n").encode())
+
+    def sendToKBPlot(self, type, touch_state, x, y):
+        # type should be in ['event', 'select', 'reshape']
+        paras = [type, touch_state, x, y]
+        self.my_socket.send(
+            str(" ".join([str(item) for item in paras]) + "\n").encode())
+
+    def reshapeKB(self, pos):
+        # pos should be [0-1] * 12, as q_pos.x, q_pos.y, p_pos.x ...
+        paras = ['reshape'] + pos
+        print(paras)
+        self.my_socket.send(
+            str(" ".join([str(item) for item in paras]) + "\n").encode())
+
     def sendButton(self, cmd):
         self.my_socket.send((cmd+"\n").encode())
-    
+
     def sendPressure(self, pressure):
         self.my_socket.send((str(pressure)+"\n").encode())
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--ip',help='Server IP Address')
+    parser.add_argument('--ip', help='Server IP Address')
     parser.add_argument('--port', type=int, default=8081,
-                    help='Server port')
+                        help='Server port')
     args = parser.parse_args()
     print(args)
     if args.ip:
@@ -48,16 +62,26 @@ if __name__ == '__main__':
     if args.port:
         PORT = args.port
     my_remote_handle = CursorClient(IP, PORT)
+
+    # for reshaping the keyboard
+    my_remote_handle.reshapeKB([0.5 * (0.9 - 0.1) / 10 + 0.1, 0.85,
+                                -0.5 * (0.9 - 0.1) / 10 + 0.9, 0.85,
+                                0.5 * (0.8 - 0.2) / 9 + 0.2, 0.5,
+                                -0.5 * (0.8 - 0.2) / 9 + 0.8, 0.5,
+                                0.5 * (0.75 - 0.25) / 9 + 0.4, 0.15,
+                                -0.5 * (0.75 - 0.25) / 9 + 0.6, 0.15])
     # for gesture keyboard or cursor pad
-    my_remote_handle.send(1, 0.6, 0.75)
-    time.sleep(1)
-    my_remote_handle.send(2, 0.25, 0.58)
-    time.sleep(1)
-    my_remote_handle.send(2, 0.9, 0.75)
-    time.sleep(1)
-    my_remote_handle.send(2, 0.85, 0.58)
-    time.sleep(1)
-    my_remote_handle.send(3, 0.85, 0.58)
+    # my_remote_handle.sendToKBPlot('event', 1, 0.6, 0.75)
+    # time.sleep(1)
+    # my_remote_handle.sendToKBPlot('event', 2, 0.25, 0.58)
+    # time.sleep(1)
+    # my_remote_handle.sendToKBPlot('event', 2, 0.9, 0.75)
+    # time.sleep(1)
+    # my_remote_handle.sendToKBPlot('event', 2, 0.85, 0.58)
+    # time.sleep(1)
+    # my_remote_handle.sendToKBPlot('event', 2, 0.2777777777777778, 0.15)
+    # time.sleep(1)
+    # my_remote_handle.sendToKBPlot('event', 3, 0.85, 0.58)
 
     # # for button pad
     # my_remote_handle.sendButton('up')
@@ -168,5 +192,3 @@ if __name__ == '__main__':
         my_remote_handle.sendButton('up')
 
     my_remote_handle.close()
-
-

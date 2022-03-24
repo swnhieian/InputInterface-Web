@@ -1,32 +1,71 @@
 export default class Layout { // QWERTY layout
-    pos;
-    keyWidth;
-    keyHeight;
+    posFirstLine;
+    posSecondLine;
+    posThirdLine;
+    firstLineKeyWidth;
+    firstLineKeyHeight;
+    secondLineKeyWidth;
+    secondLineKeyHeight;
+    thirdLineKeyWidth;
+    thirdLineKeyHeight;
+    posx;
+    posy;
+    keyboardWidth;
+    keyboardHeight;
     constructor(para) {
-        this.pos = new Map();
-        this.keyWidth = para.width / 10;
-        this.keyHeight = para.height / 3;
+        this.posFirstLine = new Map();
+        this.posSecondLine = new Map();
+        this.posThirdLine = new Map();
+        this.posx = para.posx;
+        this.posy = para.posy;
+        this.keyboardWidth = para.keyboardWidth;
+        this.keyboardHeight = para.keyboardHeight;
+        this.firstLineKeyWidth = (para.p_pos.x - para.q_pos.x) / 9;
+        this.firstLineKeyHeight = 0.3;
         let line = 'qwertyuiop';
         for (let i = 0; i < line.length; i++) {
-            this.pos.set(line[i], {x: para.posx + (i + 0.5)*this.keyWidth, y: para.posy + this.keyHeight * 0.5});
+            this.posFirstLine.set(line[i], { x: para.q_pos.x + (i) * this.firstLineKeyWidth, y: 1 - para.q_pos.y });
         }
+        this.secondLineKeyWidth = (para.l_pos.x - para.a_pos.x) / 8;
+        this.secondLineKeyHeight = 0.4;
         line = 'asdfghjkl';
         for (let i = 0; i < line.length; i++) {
-            this.pos.set(line[i], {x: para.posx + (i + 1)*this.keyWidth, y: para.posy + this.keyHeight * 1.5});
+            this.posSecondLine.set(line[i], { x: para.a_pos.x + (i) * this.secondLineKeyWidth, y: 1 - para.a_pos.y });
         }
+        this.thirdLineKeyWidth = (para.m_pos.x - para.z_pos.x) / 6;
+        this.thirdLineKeyHeight = 0.3;
         line = 'zxcvbnm';
         for (let i = 0; i < line.length; i++) {
-            this.pos.set(line[i], {x: para.posx + (i + 2)*this.keyWidth, y: para.posy + this.keyHeight * 2.5});
+            this.posThirdLine.set(line[i], { x: para.z_pos.x + (i) * this.thirdLineKeyWidth, y: 1 - para.z_pos.y });
         }
     }
     render(context) {
         context.textAlign = 'center';
-        this.pos.forEach((value, key) => {
-            context.strokeRect(value.x - this.keyWidth/2, value.y - this.keyHeight/2, this.keyWidth, this.keyHeight);
-            context.strokeText(key.toUpperCase(), value.x, value.y);
+        this.posFirstLine.forEach((value, key) => {
+            context.strokeRect(this.posx + (value.x - this.firstLineKeyWidth / 2) * this.keyboardWidth, this.posy + (value.y - this.firstLineKeyHeight / 2) * this.keyboardHeight, this.firstLineKeyWidth * this.keyboardWidth, this.firstLineKeyHeight * this.keyboardHeight);
+            context.strokeText(key.toUpperCase(), this.posx + value.x * this.keyboardWidth, this.posy + value.y * this.keyboardHeight);
         })
+        this.posSecondLine.forEach((value, key) => {
+            context.strokeRect(this.posx + (value.x - this.secondLineKeyWidth / 2) * this.keyboardWidth, this.posy + (value.y - this.secondLineKeyHeight / 2) * this.keyboardHeight, this.secondLineKeyWidth * this.keyboardWidth, this.secondLineKeyHeight * this.keyboardHeight);
+            context.strokeText(key.toUpperCase(), this.posx + value.x * this.keyboardWidth, this.posy + value.y * this.keyboardHeight);
+        })
+        this.posThirdLine.forEach((value, key) => {
+            context.strokeRect(this.posx + (value.x - this.thirdLineKeyWidth / 2) * this.keyboardWidth, this.posy + (value.y - this.thirdLineKeyHeight / 2) * this.keyboardHeight, this.thirdLineKeyWidth * this.keyboardWidth, this.thirdLineKeyHeight * this.keyboardHeight);
+            context.strokeText(key.toUpperCase(), this.posx + value.x * this.keyboardWidth, this.posy + value.y * this.keyboardHeight);
+        })
+        // console.log(this.posx + (this.posFirstLine.get('q').x - this.firstLineKeyWidth / 2) * this.keyboardWidth)
+        // console.log(this.posy + (this.posFirstLine.get('q').y - this.firstLineKeyHeight / 2) * this.keyboardHeight)
+        console.log(this.posThirdLine);
+        console.log(this.posx)
+        console.log(this.posy)
     }
     getCenter(char) {
-        return this.pos.get(char);
+        if (char in this.posFirstLine) {
+            return this.posFirstLine.get(char);
+        } else if (char in this.posSecondLine) {
+            return this.posSecondLine.get(char);
+        } else {
+            return this.posThirdLine.get(char);
+        }
     }
 }
