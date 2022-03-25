@@ -64,7 +64,7 @@ const socketServer = net.createServer((connection) => {
     });
     connection.on('data', bytes => {
         str = bytes.toString();
-        console.log(str);
+        // console.log(str);
         io.sockets.emit('data', str);
     });
     connection.on('error', err => {

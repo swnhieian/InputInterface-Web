@@ -55,9 +55,6 @@ export default class Layout { // QWERTY layout
         })
         // console.log(this.posx + (this.posFirstLine.get('q').x - this.firstLineKeyWidth / 2) * this.keyboardWidth)
         // console.log(this.posy + (this.posFirstLine.get('q').y - this.firstLineKeyHeight / 2) * this.keyboardHeight)
-        console.log(this.posThirdLine);
-        console.log(this.posx)
-        console.log(this.posy)
     }
     getCenter(char) {
         if (char in this.posFirstLine) {

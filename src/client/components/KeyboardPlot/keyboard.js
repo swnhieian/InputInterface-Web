@@ -89,7 +89,6 @@ const Keyboard = ({ cRef }) => {
 
     let onData = (data) => {
         const lines = data.split('\n');
-        console.log(lines);
         lines.forEach((element) => {
             const items = element.split(' ');
             switch (items[0]) {
@@ -103,14 +102,17 @@ const Keyboard = ({ cRef }) => {
                     dispatch({
                         type: 'reshape',
                         value: {
-                            q_pos: {x: parseFloat(items[1]), y: parseFloat(items[2])},
-                            p_pos: {x: parseFloat(items[3]), y: parseFloat(items[4])},
-                            a_pos: {x: parseFloat(items[5]), y: parseFloat(items[6])},
-                            l_pos: {x: parseFloat(items[7]), y: parseFloat(items[8])},
-                            z_pos: {x: parseFloat(items[9]), y: parseFloat(items[10])},
-                            m_pos: {x: parseFloat(items[11]), y: parseFloat(items[12])},
+                            q_pos: { x: parseFloat(items[1]), y: parseFloat(items[2]) },
+                            p_pos: { x: parseFloat(items[3]), y: parseFloat(items[4]) },
+                            a_pos: { x: parseFloat(items[5]), y: parseFloat(items[6]) },
+                            l_pos: { x: parseFloat(items[7]), y: parseFloat(items[8]) },
+                            z_pos: { x: parseFloat(items[9]), y: parseFloat(items[10]) },
+                            m_pos: { x: parseFloat(items[11]), y: parseFloat(items[12]) },
                         }
-                    })
+                    });
+                    break;
+                case 'candidates':
+                    dispatch({ type: 'candidates', value: { cands: [items[1], items[2], items[3], items[4], items[5]]}});
                     break;
                 default:
                     break;
@@ -453,21 +455,25 @@ const Keyboard = ({ cRef }) => {
             switch (action.value) {
                 case 'click':
                 case 'up':
+                    bugout.log(state.candidates.length > 0 ? state.candidates[0] : '');
                     return {
                         ...state,
                         text: state.candidates.length > 0 ? state.candidates[0] : ''
                     };
                 case 'right':
+                    bugout.log(state.candidates.length > 1 ? state.candidates[1] : '');
                     return {
                         ...state,
                         text: state.candidates.length > 1 ? state.candidates[1] : ''
                     };
                 case 'down':
+                    bugout.log(state.candidates.length > 2 ? state.candidates[2] : '');
                     return {
                         ...state,
                         text: state.candidates.length > 2 ? state.candidates[2] : ''
                     };
                 case 'left':
+                    bugout.log(state.candidates.length > 3 ? state.candidates[3] : '');
                     return {
                         ...state,
                         text: state.candidates.length > 3 ? state.candidates[3] : ''
@@ -488,7 +494,6 @@ const Keyboard = ({ cRef }) => {
                 pos.y *= keyboardHeight;
                 pos.y += canvasRef.current.height - keyboardHeight;
             }
-            console.log(pos)
             let timestamp = getTimestamp();
             //cursorPos.current = pos;
             let newState = state;
@@ -521,24 +526,29 @@ const Keyboard = ({ cRef }) => {
                     break;
                 case END:
                     bugout.log('end', timestamp);
-                    if (state.isStart) {
-                        bugout.log('interval,' + (timestamp - state.logTime));
-                        let path = [...state.userPath, pos];
-                        let cands = calculateCandidate(path);
-                        newState = {
-                            ...state,
-                            cursorPos: pos,
-                            candidates: cands,
-                            text: cands.length > 0 ? cands[0] : '',
-                            userPath: path,
-                            isStart: false
-                        }
-                    } else {
-                        newState = {
-                            ...state,
-                            cursorPos: pos,
-                            isStart: false
-                        }
+                    // if (state.isStart) {
+                    //     bugout.log('interval,' + (timestamp - state.logTime));
+                    //     let path = [...state.userPath, pos];
+                    //     let cands = calculateCandidate(path);
+                    //     newState = {
+                    //         ...state,
+                    //         cursorPos: pos,
+                    //         candidates: cands,
+                    //         text: cands.length > 0 ? cands[0] : '',
+                    //         userPath: path,
+                    //         isStart: false
+                    //     }
+                    // } else {
+                    //     newState = {
+                    //         ...state,
+                    //         cursorPos: pos,
+                    //         isStart: false
+                    //     }
+                    // }
+                    newState = {
+                        ...state,
+                        cursorPos: pos,
+                        isStart: false,
                     }
                     break;
                 default:
@@ -553,6 +563,14 @@ const Keyboard = ({ cRef }) => {
             setLPos(action.value.l_pos);
             setZPos(action.value.z_pos);
             setMPos(action.value.m_pos);
+        } else if (action.type === 'candidates') {
+            let newState = state;
+            newState = {
+                ...state,
+                candidates: action.value.cands,
+                text: action.value.cands.length > 0 ? action.value.cands[0] : '',
+            }
+            return newState;
         }
         return state;
     };
@@ -591,7 +609,7 @@ const Keyboard = ({ cRef }) => {
             <FullScreen handle={fullScreenHandle}>
                 <Card title="Gesture Keyboard" extra={settingsExtra()} style={{ height: '100%' }} bodyStyle={{ height: '100%' }}>
                     <Button onClick={e => { bugout.downloadLog() }}>Download Log</Button>
-                    <h3>输入单词:{state.text[0]}</h3>
+                    <h3>输入单词:{state.text}</h3>
                     <Row style={{ textAlign: 'center', height: '100%' }} justify="center" align="middle">
                         <Col flex={2} sm={24}>
                             <canvas ref={canvasRef} width={canvasWidth} height={canvasHeight} onMouseDown={e => mouseControl(START, e)} onMouseMove={e => mouseControl(MOVE, e)} onMouseUp={e => mouseControl(END, e)} />
@@ -604,11 +622,11 @@ const Keyboard = ({ cRef }) => {
                                 dataSource={state.candidates}
                                 renderItem={item => (
                                     <List.Item>
-                                        <div>{showScore ? (`${item}`) : item[0]}</div>
+                                        <div>{showScore ? (`${item}`) : item}</div>
                                     </List.Item>
                                 )}
                             />
-                            <Selector data={state.candidates.length > 0 ? [state.candidates[0][0], state.candidates[1][0], state.candidates[2][0], state.candidates[3][0]] : []} radius={150} />
+                            <Selector data={state.candidates.length > 0 ? [state.candidates[0], state.candidates[1], state.candidates[2], state.candidates[3]] : []} radius={150} />
                         </Col>
                     </Row>
 

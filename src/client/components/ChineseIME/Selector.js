@@ -9,7 +9,7 @@ const Selector = (props) => {
     }
     let angleStep = 2 * Math.PI / data.length;
     let items = data.map((item, no) => {
-        let angle = Math.PI / 2 - no * angleStep;
+        let angle = Math.PI / 2 - no * angleStep + Math.PI / 4;
         let width = radius * Math.sin(angleStep / 2);
         let posFactor = hasCenter?0.8:0.5;
         let xpos = radius + radius*posFactor * Math.cos(angle) - width /2;
@@ -22,7 +22,7 @@ const Selector = (props) => {
     });
     let lines = []
     for (let i=0; i<data.length; i++) {
-        let angle = -Math.PI / 2 + (i - 0.5) * angleStep;
+        let angle = -Math.PI / 2 + (i - 0.5) * angleStep + Math.PI / 4;
         lines.push(
             <div key={i} style={{height: '1px', backgroundColor: 'white', width: radius+'px', position:'absolute', left:radius+'px', top: radius+'px', transform: 'rotate('+angle+'rad)', transformOrigin: 'left'}}></div>
         );
