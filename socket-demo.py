@@ -81,7 +81,7 @@ if __name__ == '__main__':
     my_remote_handle = CursorClient(IP, PORT)
 
     # for grid
-    my_remote_handle.sendPos(0.4, 0.6)
+    # my_remote_handle.sendPos(0.4, 0.6)
 
     # for reshaping the keyboard
     # my_remote_handle.reshapeKB([0.5 * (0.9 - 0.1) / 10 + 0.1, 0.85,
@@ -105,13 +105,13 @@ if __name__ == '__main__':
     # my_remote_handle.sendToKBPlot('event', 3, 0.85, 0.58)
 
     # for set the candidates
-    # my_remote_handle.setCandidates(['hello', 'how', 'are', 'you'])
-    # time.sleep(1)
+    my_remote_handle.setCandidates(['hello', 'how', 'are', 'you'])
+    time.sleep(1)
 
     # for choose word
-    # my_remote_handle.selectWord('up')
-    # time.sleep(1)
-    # my_remote_handle.selectWord('left')
+    my_remote_handle.selectWord('up')
+    time.sleep(1)
+    my_remote_handle.selectWord('left')
 
 
     # # for button pad

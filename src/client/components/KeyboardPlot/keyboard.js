@@ -11,7 +11,6 @@ import io from 'socket.io-client';
 import './keyboard.css';
 import Layout from './layout';
 import { Debugout } from 'debugout.js';
-import Selector from '../ChineseIME/Selector';
 
 const bugout = new Debugout({ useTimestamps: true });//, realTimeLoggingOn:true });
 const START = 1;
@@ -48,19 +47,14 @@ const Keyboard = ({ cRef }) => {
     const [canvasHeight, setCanvasHeight] = useState(450);
     const fullScreenHandle = useFullScreenHandle();
     const [inputText, setInputText] = useState('');
-    const [q_pos, setQPos] = useState({ x: 0.5 * (0.9 - 0.1) / 10 + 0.1, y: 0.85 })
-    const [p_pos, setPPos] = useState({ x: -0.5 * (0.9 - 0.1) / 10 + 0.9, y: 0.85 })
-    const [a_pos, setAPos] = useState({ x: 0.5 * (0.8 - 0.2) / 9 + 0.2, y: 0.5 })
-    const [l_pos, setLPos] = useState({ x: -0.5 * (0.8 - 0.2) / 9 + 0.8, y: 0.5 })
-    const [z_pos, setZPos] = useState({ x: 0.5 * (0.75 - 0.25) / 9 + 0.25, y: 0.15 })
-    const [m_pos, setMPos] = useState({ x: -0.5 * (0.75 - 0.25) / 9 + 0.75, y: 0.15 })
-    // const [q_pos, setQPos] = useState({ x: 22.5, y: 262.5 })
-    // const [p_pos, setPPos] = useState({ x: 427.5, y: 262.5 })
-    // const [a_pos, setAPos] = useState({ x: 45, y: 337.5 })
-    // const [l_pos, setLPos] = useState({ x: 405, y: 337.5 })
-    // const [z_pos, setZPos] = useState({ x: 90, y: 412.5 })
-    // const [m_pos, setMPos] = useState({ x: 360, y: 412.5 })
-
+    const [q_pos, setQPos] = useState({ x: 0.5 * (0.9 - 0.1) / 10 + 0.1, y: 0.85 });
+    const [p_pos, setPPos] = useState({ x: -0.5 * (0.9 - 0.1) / 10 + 0.9, y: 0.85 });
+    const [a_pos, setAPos] = useState({ x: 0.5 * (0.8 - 0.2) / 9 + 0.2, y: 0.5 });
+    const [l_pos, setLPos] = useState({ x: -0.5 * (0.8 - 0.2) / 9 + 0.8, y: 0.5 });
+    const [z_pos, setZPos] = useState({ x: 0.5 * (0.75 - 0.25) / 9 + 0.25, y: 0.15 });
+    const [m_pos, setMPos] = useState({ x: -0.5 * (0.75 - 0.25) / 9 + 0.75, y: 0.15 });
+    const [candidates, setCandidates] = useState(["hello", "how", "are", "you"]);
+    const [sentence, setSentence] = useState("");
 
     const layout = useRef(null);
     // const [layout, setLayout] = useState(new Layout({'width': 450, 'height': 225, 'posx': 0, 'posy': 225}));
@@ -112,7 +106,8 @@ const Keyboard = ({ cRef }) => {
                     });
                     break;
                 case 'candidates':
-                    dispatch({ type: 'candidates', value: { cands: [items[1], items[2], items[3], items[4], items[5]]}});
+                    setCandidates([items[1], items[2], items[3], items[4], items[5]]);
+                    dispatch({ type: 'candidates', value: { cands: [items[1], items[2], items[3], items[4], items[5]] } });
                     break;
                 default:
                     break;
@@ -133,9 +128,10 @@ const Keyboard = ({ cRef }) => {
             posy: keyboardPosY,
             keyboardHeight: keyboardHeight,
             keyboardWidth: keyboardWidth,
+            candidates: candidates,
         });
         updateCanvas();
-    }, [keyboardHeight, keyboardWidth, keyboardPosX, keyboardPosY, q_pos, p_pos, a_pos, l_pos, z_pos, m_pos]);
+    }, [keyboardHeight, keyboardWidth, keyboardPosX, keyboardPosY, q_pos, p_pos, a_pos, l_pos, z_pos, m_pos, candidates]);
 
     useEffect(() => {
         updateCanvas();
@@ -160,6 +156,7 @@ const Keyboard = ({ cRef }) => {
             posy: keyboardPosY,
             keyboardHeight: keyboardHeight,
             keyboardWidth: keyboardWidth,
+            candidates: candidates,
         });
         updateCanvas();
     };
@@ -336,19 +333,6 @@ const Keyboard = ({ cRef }) => {
         });
     }, []);
 
-
-
-    const similarity = (p1, p2) => {
-        if (p1.length != sampleSize || p2.length != sampleSize) {
-            throw new Error(`Path length invalid!${p1.length},${p2.length}`);
-        }
-        let ret = 0;
-        for (let i = 0; i < sampleSize; i++) {
-            ret += distance(p1[i], p2[i]);
-        }
-        return ret / sampleSize;
-    };
-
     const logGaussian = (x, mu, sigma) => {
         const ret = -(x - mu) * (x - mu) / 2 / sigma / sigma - Math.log(Math.sqrt(2 * Math.PI)) - Math.log(sigma);
         return ret;
@@ -371,13 +355,6 @@ const Keyboard = ({ cRef }) => {
         return ret;
     };
 
-    const calculateProbability = (p1, p2, word, freq) => {
-        let ret = 0;
-        ret += calculateShapeProbability(p1, p2, word);
-        ret += calculateLocationProbability(p1, p2, word);
-        ret += Math.log(freq);
-        return ret;
-    };
 
     const normalizePath = (p) => {
         let minx = Number.MAX_VALUE;
@@ -452,31 +429,36 @@ const Keyboard = ({ cRef }) => {
         if (action.type === 'select') {
             if (action.value.length == 0) return state;
             bugout.log(action.value, new Date().getTime());
+            let lastSentence = sentence;
             switch (action.value) {
                 case 'click':
                 case 'up':
+                    setSentence(lastSentence + " " + state.candidates[0]);
                     bugout.log(state.candidates.length > 0 ? state.candidates[0] : '');
                     return {
                         ...state,
-                        text: state.candidates.length > 0 ? state.candidates[0] : ''
+                        text: state.candidates.length > 0 ? state.candidates[0] : '',
                     };
                 case 'right':
+                    setSentence(lastSentence + " " + state.candidates[1]);
                     bugout.log(state.candidates.length > 1 ? state.candidates[1] : '');
                     return {
                         ...state,
-                        text: state.candidates.length > 1 ? state.candidates[1] : ''
+                        text: state.candidates.length > 1 ? state.candidates[1] : '',
                     };
                 case 'down':
+                    setSentence(lastSentence + " " + state.candidates[2]);
                     bugout.log(state.candidates.length > 2 ? state.candidates[2] : '');
                     return {
                         ...state,
-                        text: state.candidates.length > 2 ? state.candidates[2] : ''
+                        text: state.candidates.length > 2 ? state.candidates[2] : '',
                     };
                 case 'left':
+                    setSentence(lastSentence + " " + state.candidates[3]);
                     bugout.log(state.candidates.length > 3 ? state.candidates[3] : '');
                     return {
                         ...state,
-                        text: state.candidates.length > 3 ? state.candidates[3] : ''
+                        text: state.candidates.length > 3 ? state.candidates[3] : '',
                     };
                 default:
                     return state;
@@ -610,26 +592,14 @@ const Keyboard = ({ cRef }) => {
                 <Card title="Gesture Keyboard" extra={settingsExtra()} style={{ height: '100%' }} bodyStyle={{ height: '100%' }}>
                     <Button onClick={e => { bugout.downloadLog() }}>Download Log</Button>
                     <h3>输入单词:{state.text}</h3>
+                    <h3>输入句子:{sentence}</h3>
                     <Row style={{ textAlign: 'center', height: '100%' }} justify="center" align="middle">
                         <Col flex={2} sm={24}>
-                            <canvas ref={canvasRef} width={canvasWidth} height={canvasHeight} onMouseDown={e => mouseControl(START, e)} onMouseMove={e => mouseControl(MOVE, e)} onMouseUp={e => mouseControl(END, e)} />
+                            <canvas ref={canvasRef} width={canvasWidth} height={canvasHeight} data={state.candidates.length > 0 ? [state.candidates[0], state.candidates[1], state.candidates[2], state.candidates[3]] : []} onMouseDown={e => mouseControl(START, e)} onMouseMove={e => mouseControl(MOVE, e)} onMouseUp={e => mouseControl(END, e)}>
+                            </canvas>
                             {/* <canvas ref={canvasRef} width="450" height="450"/> */}
                         </Col>
-                        <Col flex={1}>
-                            <List
-                                header={<div>候选词列表</div>}
-                                bordered
-                                dataSource={state.candidates}
-                                renderItem={item => (
-                                    <List.Item>
-                                        <div>{showScore ? (`${item}`) : item}</div>
-                                    </List.Item>
-                                )}
-                            />
-                            <Selector data={state.candidates.length > 0 ? [state.candidates[0], state.candidates[1], state.candidates[2], state.candidates[3]] : []} radius={150} />
-                        </Col>
                     </Row>
-
                     <Drawer
                         visible={showSettings}
                         onClose={settingsClosed}
