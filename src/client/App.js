@@ -11,6 +11,7 @@ import Grid from './components/Grid/Grid';
 import ChineseIME from './components/ChineseIME/ChineseIME';
 import Keyboard from './components/Keyboard/keyboard';
 import KeyboardPlot from './components/KeyboardPlot/keyboard';
+import Playground from './components/Playground/keyboard';
 import Ninekeys from './components/NineKeys/ninekeys';
 import MorseCode from './components/MorseCode/MorseCode';
 import PressureTest from './components/Pressure/PressureTest';
@@ -53,6 +54,9 @@ const Pagelayout = () => {
                     <Menu.Item key="/keyboardplot" icon={<IconFont type="iconkeyboard" />}>
                         <Link to="/keyboardplot">KeyboardPlot</Link>
                     </Menu.Item>
+                    <Menu.Item key="/playground" icon={<IconFont type="iconkeyboard" />}>
+                        <Link to="/playground">Playground</Link>
+                    </Menu.Item>
                     <Menu.Item key="/grid" icon={<IconFont type="iconcursor" />}>
                         <Link to="/grid">Grid</Link>
                     </Menu.Item>
@@ -83,6 +87,7 @@ const Pagelayout = () => {
                         <Switch>
                             <Route path="/keyboard"><Keyboard /></Route>
                             <Route path="/keyboardplot"><KeyboardPlot /></Route>
+                            <Route path="/playground"><Playground /></Route>
                             <Route path="/grid"><Grid /></Route>
                             <Route path="/gloves"><Gloves /></Route>
                             <Route path="/morse"><MorseCode /></Route>
