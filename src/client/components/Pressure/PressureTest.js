@@ -17,7 +17,7 @@ const PressureTest = (props) => {
 
     useEffect(() => {
         window.addEventListener('keydown', (event) => {
-            console.log("in key down|" + event.code+"|");
+            console.log("in key down|" + event.code + "|");
             switch (event.code) {
                 case 'ArrowLeft':
                     event.preventDefault();
@@ -49,60 +49,70 @@ const PressureTest = (props) => {
         switch (action.type) {
             case 'pressure':
                 if (isNaN(action.value)) return state;
-                if (state.status === 'maxforce') {
-                    let lastV = state.lastPressure;
-                    if (Math.abs(action.value - lastV) < jittor) {
-                        let time = timeStamp - state.lastTime;
-                        if (time > maxforceTime) {
-                            return {
-                                ...state,
-                                status: '',
-                                maxForce: Math.max(state.lastPressure, action.value)
-                            }
-                        } else {
-                            return {
-                                ...state,
-                                lastPressure: Math.max(state.lastPressure, action.value),
-                                value: action.value
-                            }
-                        }
-                    } else { // not stable
-                        return {
-                            ...state,
-                            lastPressure: action.value,
-                            lastTime: timeStamp,
-                            value: action.value
-                        }
-                    }
-                } else { // not in maxforce test
-                    console.log(action.value);
-                    return {
-                        ...state,
-                        value: action.value
-                    };
-                }
-            case 'maxforce':
+                // if (state.status === 'maxforce') {
+                //     let lastV = state.lastPressure;
+                //     if (Math.abs(action.value - lastV) < jittor) {
+                //         let time = timeStamp - state.lastTime;
+                //         if (time > maxforceTime) {
+                //             return {
+                //                 ...state,
+                //                 status: '',
+                //                 maxForce: Math.max(state.lastPressure, action.value)
+                //             }
+                //         } else {
+                //             return {
+                //                 ...state,
+                //                 lastPressure: Math.max(state.lastPressure, action.value),
+                //                 value: action.value
+                //             }
+                //         }
+                //     } else { // not stable
+                //         return {
+                //             ...state,
+                //             lastPressure: action.value,
+                //             lastTime: timeStamp,
+                //             value: action.value
+                //         }
+                //     }
+                // } else { // not in maxforce test
                 return {
                     ...state,
-                    status: 'maxforce'
+                    value: action.value
+                };
+            // }
+            case 'maxforce':
+                console.log("maxforce");
+                return {
+                    ...state,
+                    status: 'maxforce',
+                    maxForce: action.value
                 }
             default:
                 return state;
 
         }
     };
-    const [state, dispatch] = useReducer(reducer, {status: '', value: 0.0, maxForce: null});
+    const [state, dispatch] = useReducer(reducer, { status: '', value: 0.0, maxForce: null });
 
     useEffect(() => {
-        console.log("trying to connect to "+ document.domain+':8080');
-        const socket = io(document.domain+':8080');
+        console.log("trying to connect to " + document.domain + ':8080');
+        const socket = io(document.domain + ':8080');
         socket.on('connect', () => {
-            console.log(document.domain+':8080'+'connected!!');
+            console.log(document.domain + ':8080' + 'connected!!');
         });
-        socket.on('data', function(data) {
+        socket.on('data', function (data) {
             let lines = data.split('\n');
             lines.forEach(element => {
-                dispatch({type: 'pressure', value: parseFloat(element.trim())});
+                const items = element.split(' ');
+                console.log(items)
+                switch (items[0]) {
+                    case 'pressure':
+                        dispatch({ type: 'pressure', value: parseFloat(items[1]) });
+                        break;
+                    case 'maxforce':
+                        dispatch({ type: 'maxforce', value: parseFloat(items[1]) });
+                        break;
+                }
             });
         });
         return function closeSocket() {
@@ -111,15 +121,15 @@ const PressureTest = (props) => {
     }, []);
 
     const testMaxForce = (event) => {
-        dispatch({type: 'maxforce'});
+        dispatch({ type: 'maxforce' });
     }
 
     const testForceResolution = (event) => {
-        dispatch({type: 'resolution'});
+        dispatch({ type: 'resolution' });
     }
 
 
-    
+
 
     const [showSettings, setShowSettings] = useState(false);
     const fullScreenHandle = useFullScreenHandle();
@@ -129,11 +139,11 @@ const PressureTest = (props) => {
 
     let settingsExtra = () => (
         <Space>
-        <SettingOutlined onClick={event=>setShowSettings(true)}/>
-        {fullScreenHandle.active
-          ? <FullscreenExitOutlined onClick={fullScreenHandle.exit}/>
-          : <FullscreenOutlined onClick={fullScreenHandle.enter}/>
-        }
+            <SettingOutlined onClick={event => setShowSettings(true)} />
+            {fullScreenHandle.active
+                ? <FullscreenExitOutlined onClick={fullScreenHandle.exit} />
+                : <FullscreenOutlined onClick={fullScreenHandle.enter} />
+            }
         </Space>
     );
 
@@ -143,99 +153,95 @@ const PressureTest = (props) => {
 
     const formLayout = {
         labelCol: {
-          span: 8,
+            span: 8,
         },
         wrapperCol: {
-          span: 16,
+            span: 16,
         },
         labelAlign: 'left'
     };
 
     const bindingsData = [
         {
-          key: '←',
-          function: 'Di/·'
+            key: '←',
+            function: 'Di/·'
         },
         {
-          key: '→',
-          function: 'Da/-'
+            key: '→',
+            function: 'Da/-'
         },
         {
-          key: 'Space',
-          function: 'Confirm/Space'
+            key: 'Space',
+            function: 'Confirm/Space'
         },
         {
-          key: 'ESC',
-          function: 'Cancel/Clear'
+            key: 'ESC',
+            function: 'Cancel/Clear'
         }
-      ];
+    ];
 
-    
-  
+
+
 
     return (
-      <FullScreen handle={fullScreenHandle}>
-      <Card title="Pressure Test" extra={settingsExtra()} style={{height: '100%'}} bodyStyle={{height: '100%'}}>
-          <Button onClick={testMaxForce}>Max Force</Button>
-          <Button onClick={testForceResolution}>Resolution</Button>
-          <br/>
-          <Form layout='inline'>
-                <Form.Item layout="inline">
-                
-                          <Form.Item label="分级">
-                          <InputNumber min={2} max={30000} step={1} onChange={v => setLevel(v)} value={level} />
-                          </Form.Item>
-                          <Form.Item label="目标">
-                          <InputNumber min={0} max={level-1} step={1} onChange={v => setTarget(v)} value={target} />
-                          </Form.Item>
-                </Form.Item>
-          </Form>
-         
-      <Divider>Max Force : {state.maxForce===null?'?':state.maxForce}</Divider>
-      <Row>
-        <PressureBar steps={1} percent={state.value*100 / range} />
-      </Row>
-      <Divider>Resolution:</Divider>
-      <Row>
-        <PressureBar steps={level} target={target} percent={state.value*100 / range}/>
-      </Row>
-        
-        <Drawer 
-              visible={showSettings} 
-              onClose={settingsClosed}
-              width={720}
-              title='设置'>
-                <Form layout='horizontal' {...formLayout}>
-                <Form.Item layout="horizontal" {...formLayout}>
-                          <Form.Item label="压力最大可能值">
-                            <InputNumber
-                                style={{ width: '100%' }}
-                                defaultValue="1"
-                                min="0"
-                                max="1000"
-                                step="0.01"
-                                value={range}
-                                onChange={v=>setRange(v)}
-                                stringMode
-                            />
-                          </Form.Item>
-                          <Form.Item label="压力平稳抖动阈值">
-                            <InputNumber
-                                style={{ width: '100%' }}
-                                defaultValue="0.05"
-                                min="0"
-                                max="1000"
-                                step="0.01"
-                                value={jittor}
-                                onChange={v=>setJittor(v)}
-                                stringMode
-                            />
-                          </Form.Item>
-                          <Form.Item label="压力保持不变时长阀值(ms)">
-                            <InputNumber style={{ width: '100%' }} min={100} max={30000} step={1000} onChange={v => setMaxforceTime(v)} value={maxforceTime} />
-                          </Form.Item>
+        <FullScreen handle={fullScreenHandle}>
+            <Card title="Pressure Test" extra={settingsExtra()} style={{ height: '100%' }} bodyStyle={{ height: '100%' }}>
+                <Button onClick={testMaxForce}>Max Force</Button>
+                <Button onClick={testForceResolution}>Resolution</Button>
+                <br />
+                <Form layout='inline'>
+                    <Form.Item layout="inline">
 
-                              {/* <InputNumber style={{ width: '100%' }} min={1000} max={30000} step={1000} onChange={v => setCorpusSize(v)} value={corpusSize} />
+                        <Form.Item label="分级">
+                            <InputNumber min={2} max={30000} step={1} onChange={v => setLevel(v)} value={level} />
+                        </Form.Item>
+                        <Form.Item label="目标">
+                            <InputNumber min={0} max={level - 1} step={1} onChange={v => setTarget(v)} value={target} />
+                        </Form.Item>
+                    </Form.Item>
+                </Form>
+
+                <Divider>Max Force : {state.maxForce === null ? '?' : state.maxForce}</Divider>
+                <Divider>Pressure:</Divider>
+                <Row>
+                    <PressureBar steps={level} target={target} percent={state.value * 100 / range} />
+                </Row>
+                <Drawer
+                    visible={showSettings}
+                    onClose={settingsClosed}
+                    width={720}
+                    title='设置'>
+                    <Form layout='horizontal' {...formLayout}>
+                        <Form.Item layout="horizontal" {...formLayout}>
+                            <Form.Item label="压力最大可能值">
+                                <InputNumber
+                                    style={{ width: '100%' }}
+                                    defaultValue="1"
+                                    min="0"
+                                    max="1000"
+                                    step="0.01"
+                                    value={range}
+                                    onChange={v => setRange(v)}
+                                    stringMode
+                                />
+                            </Form.Item>
+                            <Form.Item label="压力平稳抖动阈值">
+                                <InputNumber
+                                    style={{ width: '100%' }}
+                                    defaultValue="0.05"
+                                    min="0"
+                                    max="1000"
+                                    step="0.01"
+                                    value={jittor}
+                                    onChange={v => setJittor(v)}
+                                    stringMode
+                                />
+                            </Form.Item>
+                            <Form.Item label="压力保持不变时长阀值(ms)">
+                                <InputNumber style={{ width: '100%' }} min={100} max={30000} step={1000} onChange={v => setMaxforceTime(v)} value={maxforceTime} />
+                            </Form.Item>
+
+                            {/* <InputNumber style={{ width: '100%' }} min={1000} max={30000} step={1000} onChange={v => setCorpusSize(v)} value={corpusSize} />
                             </Form.Item>
                           <Form.Item label="绑定鼠标事件">
                               <Switch checked={useMouse} onChange={v => setUseMouse(v)} />
@@ -249,11 +255,11 @@ const PressureTest = (props) => {
                           <Form.Item label="显示匹配结果">
                               <Switch checked={showScore} onChange={v => setShowScore(v)} />
                             </Form.Item> */}
-                </Form.Item>
-              </Form>
-            </Drawer>
-      </Card>   
-      </FullScreen> 
+                        </Form.Item>
+                    </Form>
+                </Drawer>
+            </Card>
+        </FullScreen>
     );
 }
 

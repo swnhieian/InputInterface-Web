@@ -21,16 +21,12 @@ const Grid = (props) => {
     const fullScreenHandle = useFullScreenHandle();
     const [hasTarget, setHasTarget] = useState(false);
     const [target, setTarget] = useState({ x: -1, y: -1 });
-    const [targetSize, setTargetSize] = useState(2);
+    const [targetSize, setTargetSize] = useState(1);
 
     const [reached, setReached] = useState(false);
     const [lastTime, setLasttime] = useState(0);
     const [holdTime, setHoldTime] = useState(0);
     const [logOutput, setLogoutput] = useState('');
-
-
-
-
 
     const reducer = (state, action) => {
         let xindex = Math.floor(action.x / canvasRef.current.width * col);

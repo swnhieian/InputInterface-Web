@@ -36,7 +36,7 @@ class CursorClient:
         paras = [type, touch_state, x, y]
         self.my_socket.send(
             str(" ".join([str(item) for item in paras]) + "\n").encode())
-    
+
     def selectWord(self, selectDirection):
         paras = ["select", selectDirection]
         self.my_socket.send(
@@ -60,12 +60,16 @@ class CursorClient:
         self.my_socket.send((cmd+"\n").encode())
 
     def sendPressure(self, pressure):
-        self.my_socket.send((str(pressure)+"\n").encode())
+        self.my_socket.send(('pressure' + " " + str(pressure) + "\n").encode())
+
+    def sendMaxForce(self, pressure):
+        self.my_socket.send(('maxforce' + " " + str(pressure) + "\n").encode())
 
     def sendPos(self, x, y):
         paras = ['grid', x, y]
         self.my_socket.send(
             str(" ".join([str(item) for item in paras]) + "\n").encode())
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -81,7 +85,7 @@ if __name__ == '__main__':
     my_remote_handle = CursorClient(IP, PORT)
 
     # for grid
-    # my_remote_handle.sendPos(0.4, 0.6)
+    my_remote_handle.sendPos(0.4, 0.6)
 
     # for reshaping the keyboard
     # my_remote_handle.reshapeKB([0.5 * (0.9 - 0.1) / 10 + 0.1, 0.85,
@@ -90,7 +94,7 @@ if __name__ == '__main__':
     #                             -0.5 * (0.8 - 0.2) / 9 + 0.8, 0.5,
     #                             0.5 * (0.75 - 0.25) / 9 + 0.4, 0.15,
     #                             -0.5 * (0.75 - 0.25) / 9 + 0.6, 0.15])
-    
+
     # for gesture keyboard or cursor pad
     # my_remote_handle.sendToKBPlot('event', 1, 0.6, 0.75)
     # time.sleep(1)
@@ -105,14 +109,13 @@ if __name__ == '__main__':
     # my_remote_handle.sendToKBPlot('event', 3, 0.85, 0.58)
 
     # for set the candidates
-    my_remote_handle.setCandidates(['hello', 'how', 'are', 'you'])
-    time.sleep(1)
+    # my_remote_handle.setCandidates(['hello', 'how', 'are', 'you'])
+    # time.sleep(1)
 
     # for choose word
-    my_remote_handle.selectWord('up')
-    time.sleep(1)
-    my_remote_handle.selectWord('left')
-
+    # my_remote_handle.selectWord('up')
+    # time.sleep(1)
+    # my_remote_handle.selectWord('left')
 
     # # for button pad
     # my_remote_handle.sendButton('up')
@@ -129,6 +132,8 @@ if __name__ == '__main__':
     # time.sleep(1)
 
     # for pressure test
+    # my_remote_handle.sendMaxForce(0.9)
+    # time.sleep(1)
     # my_remote_handle.sendPressure(0.1)
     # time.sleep(1)
     # my_remote_handle.sendPressure(0.13)
