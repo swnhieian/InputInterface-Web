@@ -7,7 +7,7 @@ import {
 import { useLocation } from 'react-router-dom/cjs/react-router-dom.min';
 import './app.css';
 import Gloves from './components/Gloves/gloves';
-import Grid from './components/Grid/Grid';
+import Grid from './components/Grid/grid';
 import ChineseIME from './components/ChineseIME/ChineseIME';
 import Keyboard from './components/Keyboard/keyboard';
 import KeyboardPlot from './components/KeyboardPlot/keyboard';
