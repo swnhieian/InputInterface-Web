@@ -7,6 +7,9 @@ import React, { useEffect, useReducer, useState } from 'react';
 import './gloves.css';
 import { FullScreen, useFullScreenHandle } from "react-full-screen";
 import io from 'socket.io-client';
+import { Debugout } from 'debugout.js';
+
+const bugout = new Debugout({ useTimestamps: true });
 
 let taskTimeout = null;
 // let config = {
@@ -55,12 +58,15 @@ const Gloves = () => {
         if (config.tasks) {
             [tasks] = config.tasks;
         }
+        let nos = []
         while (tasks.length < config.taskNum) {
             const no = Math.floor(Math.random() * config.labels.length);
             if (no !== config.initPos[0] * config.col + config.initPos[1]) {
                 tasks.push(config.labels[no]);
+                nos.push(no);
             }
         }
+        bugout.log("tasks: ", nos);
         return tasks;
     };
 
@@ -84,6 +90,7 @@ const Gloves = () => {
                 if (state.currTask+1 !== config.taskNum) {
                     taskTimeout = setTimeout(()=>dispatch('next'), config.t2);
                 }
+                bugout.log("next ", new Date().getTime());
                 return {
                     ...state,
                     click: false,
@@ -95,30 +102,36 @@ const Gloves = () => {
                 if (state.click) {return state;}
                 clearTimeout(taskTimeout);
                 setTimeout(() => dispatch('next'), config.duration);
+                bugout.log("click ", new Date().getTime());
+                bugout.log("clickpoint", state.pos);
                 return {
                     ...state,
                     click: true
                 };
             case 'up':
                 if (state.currTask < 0 || state.currTask >= config.taskNum) { return state; }
+                bugout.log("up ", new Date().getTime());
                 return {
                     ...state,
                     pos: move(state, -1, 0)
                 };
             case 'down':
                 if (state.currTask < 0 || state.currTask >= config.taskNum) { return state; }
+                bugout.log("down ", new Date().getTime());
                 return {
                     ...state,
                     pos: move(state, 1, 0)
                 };
             case 'left':
                 if (state.currTask < 0 || state.currTask >= config.taskNum) { return state; }
+                bugout.log("left ", new Date().getTime());
                 return {
                     ...state,
                     pos: move(state, 0, -1)
                 };
             case 'right':
                 if (state.currTask < 0 || state.currTask >= config.taskNum) { return state; }
+                bugout.log("right ", new Date().getTime());
                 return {
                     ...state,
                     pos: move(state, 0, 1)
@@ -214,6 +227,7 @@ const Gloves = () => {
     return (
       <FullScreen handle={fullScreenHandle}>
         <Card title="Gloves" extra={settingsExtra()} style={{ height: '100%' }} bodyStyle={{ height: '100%' }}>
+            <Button onClick={e => { bugout.downloadLog() }}>Download Log</Button>
             <div style={{textAlign: 'center'}}>
                 <Button onClick={() => dispatch('start')} disabled={state.currTask >= 0 && state.currTask < config.taskNum}>开始</Button>
                 <Button onClick={() => dispatch('next')} disabled={state.currTask < 0 || state.currTask >= config.taskNum}>下一个</Button>
