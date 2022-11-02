@@ -131,10 +131,24 @@ const MorseCode = (props) => {
         }
     }, []);
 
+    const sleep = function(ms) {
+    	let temp = new Promise((resolve) => {
+    		setTimeout(resolve, ms);
+    	})
+    	return temp
+    };
+
+    useEffect(() => {
+    	sleep(600).then(() => {
+    		setShowCursor(!showCursor);
+    	});
+    }, showCursor);
+
 
     
 
     const [showSettings, setShowSettings] = useState(false);
+    const [showCursor, setShowCursor] = useState(false);
     const fullScreenHandle = useFullScreenHandle();
 
 
@@ -189,11 +203,14 @@ const MorseCode = (props) => {
       <Card title="Morse Code" extra={settingsExtra()} style={{height: '100%'}} bodyStyle={{height: '100%'}}>
       <Divider>Current Code</Divider>
       <Row>
-        <Col>{state.code+"_"}</Col>
+        <Col flex="auto" span={24} style={{fontSize: '40px', textAlign: 'center'}}>
+        <span>{state.code}</span>
+        <span style={{color: showCursor?'black':'white'}}>|</span>
+        </Col>
       </Row>
       <Divider>Current Input</Divider>
       <Row>
-        <Col>{state.input+"_"}</Col>
+        <Col  span={24} style={{fontSize: '40px', textAlign: 'center'}}>&nbsp;{state.input}</Col>
       </Row>
       <Divider plain>Key Bindings</Divider>
       <Row ><Col span={24}>
