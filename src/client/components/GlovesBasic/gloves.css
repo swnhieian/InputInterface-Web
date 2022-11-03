@@ -1,0 +1,22 @@
+span {
+    color: black;
+}
+span.selected {
+    border: 5px green solid;
+    background-color: lightblue;
+}
+
+span.normal {
+    border: none;
+    background-color: lightblue;
+}
+
+span.clicked {
+    border: 5px green solid;
+    background-color: yellow;
+}
+.task {
+    text-align: center;
+    font-weight: bold;
+    font-size: 30px;
+}
