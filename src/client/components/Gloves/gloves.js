@@ -7,6 +7,9 @@ import React, { useEffect, useReducer, useState } from 'react';
 import './gloves.css';
 import { FullScreen, useFullScreenHandle } from "react-full-screen";
 import io from 'socket.io-client';
+import { Debugout } from 'debugout.js';
+
+const bugout = new Debugout({ useTimestamps: true });//, realTimeLoggingOn:true });
 
 let taskTimeout = null;
 // let config = {
@@ -34,8 +37,8 @@ const Gloves = () => {
         labels: ['主风机', '主泵', '主通信机', '照明', '+', '摄像', '副风机', '副泵', '备通信机'],
         initPos: [1, 1],
         duration: 2000,
-        t2: 10000,
-        taskNum: 10,
+        t2: 100000000000000000,
+        taskNum: 8,
         tasks: null
     });
     const [showSettings, setShowSettings] = useState(false);
@@ -50,17 +53,35 @@ const Gloves = () => {
         labelAlign: 'left'
     };
 
+    const shuffle = (array) => {
+        let res = [], random;
+        while (array.length > 0) {
+            // console.log(array.length);
+            // console.log(Math.random() * array.length);
+            random = Math.floor(Math.random() * array.length);
+            res.push(array[random]);
+            array.splice(random, 1);
+        }
+        console.log(res)
+        return res;
+    }
+
     const generateTask = () => {
         let tasks = [];
-        if (config.tasks) {
-            [tasks] = config.tasks;
-        }
-        while (tasks.length < config.taskNum) {
-            const no = Math.floor(Math.random() * config.labels.length);
-            if (no !== config.initPos[0] * config.col + config.initPos[1]) {
-                tasks.push(config.labels[no]);
-            }
-        }
+        // if (config.tasks) {
+        //     [tasks] = config.tasks;
+        // }
+        // while (tasks.length < config.taskNum) {
+        //     const no = Math.floor(Math.random() * config.labels.length);
+        //     if (no !== config.initPos[0] * config.col + config.initPos[1]) {
+        //         tasks.push(config.labels[no]);
+        //     }
+        // }
+        let array = [...config.labels]
+        array.splice(4, 1)
+        tasks = shuffle(array)
+        console.log(tasks)
+        bugout.log(tasks);
         return tasks;
     };
 
@@ -214,6 +235,7 @@ const Gloves = () => {
     return (
         <FullScreen handle={fullScreenHandle} >
             <Card title="Gloves" extra={settingsExtra()} headStyle={{ background: '#323233', color: '#888e8e', border: '0px' }} style={{ height: '100%' }} bodyStyle={{ height: '100%', background: '#1e1e1e', border: '0px' }} >
+                <Button onClick={e => { bugout.downloadLog() }}>Download Log</Button>
                 <div style={{ textAlign: 'center' }}>
                     <Button style={{ background: '#a9a9a9', border: '0px', margin: '10px' }} onClick={() => dispatch('start')} disabled={state.currTask >= 0 && state.currTask < config.taskNum}>开始</Button>
                     <Button style={{ background: '#a9a9a9', border: '0px', margin: '10px' }} onClick={() => dispatch('next')} disabled={state.currTask < 0 || state.currTask >= config.taskNum}>下一个</Button>
