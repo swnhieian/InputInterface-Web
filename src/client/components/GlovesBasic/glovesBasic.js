@@ -31,7 +31,7 @@ const GlovesBasic = () => {
     const [config, setConfig] = useState({
         row: 3,
         col: 3,
-        labels: ['向下', '向左', '向右'],
+        labels: ['向下', '向左', '向右', '长按'],
         initPos: [1, 1],
         duration: 2000,
         t2: 100000000000000,
@@ -69,6 +69,19 @@ const GlovesBasic = () => {
         return [(s.pos[0] + dx + config.row) % config.row, (s.pos[1] + dy + config.col) % config.col];
     };
     const reducer = (state, action) => {
+        let items = action.split(' ');
+        if (items && items[0] === 'targets') {
+            tasks = []
+            for (let i in items.slice(1)) {
+                tasks.push(config.labels[i]);
+            }
+            if (state.currTask !== -1 && state.currTask !== config.taskNum) { return state; }
+            return {
+                ...state,
+                currTask: 0,
+                tasks: tasks
+            };
+        }
         switch (action) {
             case 'start':
                 if (state.currTask !== -1 && state.currTask !== config.taskNum) { return state; }
