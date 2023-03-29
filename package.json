@@ -3,6 +3,12 @@
   "version": "1.0.0",
   "description": "A Web-based Input Interface",
   "main": "src/server/index.js",
+  "bin": "src/server/index.js",
+  "pkg": {
+    "assets": [
+      "dist/**/*"
+    ]
+  },
   "scripts": {
     "build": "webpack --mode production",
     "start": "npm run build && node src/server/index.js",
